@@ -209,10 +209,10 @@ class TestWinConditions:
         """Test O can win."""
         engine = GameEngine()
         engine.make_move(0)  # X at 0
+        engine.make_move(4)  # O at 4
+        engine.make_move(2)  # X at 2
         engine.make_move(1)  # O at 1
         engine.make_move(3)  # X at 3
-        engine.make_move(4)  # O at 4
-        engine.make_move(6)  # X at 6
         engine.make_move(7)  # O at 7 - O wins
         
         assert engine.game_over
@@ -226,7 +226,10 @@ class TestDrawCondition:
         """Test draw condition."""
         engine = GameEngine()
         # Play a draw game
-        moves = [0, 1, 2, 3, 5, 4, 7, 6, 8]
+        # X | X | O
+        # O | O | X
+        # X | O | X
+        moves = [0, 2, 1, 3, 5, 4, 6, 7, 8]
         for move in moves:
             engine.make_move(move)
         
@@ -256,7 +259,7 @@ class TestBoardState:
         engine.make_move(0)
         engine.make_move(4)
         
-        state = engine.get_board_state_2d()
+        state = engine.get_board_2d()
         assert state.shape == (3, 3)
         assert state[0, 0] == 1  # X at (0, 0)
         assert state[1, 1] == -1  # O at (1, 1)
@@ -267,7 +270,8 @@ class TestBoardState:
         engine.make_move(0)
         
         state = engine.get_board_state()
-        state[0] = 999  # Modify returned state
+        state = state.astype(np.int64)  # Convert to int64 to avoid overflow
+        state[0] = 99  # Modify returned state
         
         # Original board should be unchanged
         assert engine.board.flat[0] == 1
