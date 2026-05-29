@@ -1,160 +1,118 @@
 """
 Core Tic-Tac-Toe game engine.
 Implements game rules, board state management, and game flow.
+Optimized for Q-Learning with immutable tuple-based board representation.
 """
 
-import numpy as np
-from enum import Enum
 from typing import Tuple, List, Optional
 
 
-class Player(Enum):
-    """Enum for player types."""
-    X = 1
-    O = -1
-    EMPTY = 0
-
-
-class GameEngine:
+class TicTacToe:
     """
-    Tic-Tac-Toe game engine managing board state and game logic.
+    Tic-Tac-Toe game engine with immutable tuple-based board representation.
     
     Board representation:
-    - 1 for X (player)
-    - -1 for O (opponent)
-    - 0 for empty
+    - 1D tuple of size 9 (immutable for use as dict keys in Q-Learning)
+    - States: 0 for empty, 1 for X, -1 for O
+    - Indexing:
+      0 | 1 | 2
+      ---------
+      3 | 4 | 5
+      ---------
+      6 | 7 | 8
     """
     
     def __init__(self):
         """Initialize a new game."""
-        self.board = np.zeros((3, 3), dtype=np.int8)
-        self.current_player = Player.X
-        self.game_over = False
-        self.winner = None
-        self.move_count = 0
-    
-    def reset(self) -> None:
-        """Reset the game to initial state."""
-        self.board = np.zeros((3, 3), dtype=np.int8)
-        self.current_player = Player.X
-        self.game_over = False
-        self.winner = None
-        self.move_count = 0
-    
-    def get_valid_moves(self) -> List[int]:
+        self.board = (0,) * 9  # Immutable tuple is perfect for dict keys
+        self.current_player = 1  # 1 for X, -1 for O
+
+    def reset(self) -> Tuple:
         """
-        Get list of valid move positions (0-8).
+        Reset the game to initial state.
         
-        Board indexing:
-        0 | 1 | 2
-        ---------
-        3 | 4 | 5
-        ---------
-        6 | 7 | 8
+        Returns:
+            The reset board state (tuple).
+        """
+        self.board = (0,) * 9
+        self.current_player = 1
+        return self.board
+
+    def get_available_actions(self) -> List[int]:
+        """
+        Get list of available action positions (0-8).
         
         Returns:
             List of valid move indices.
         """
-        return [i for i in range(9) if self.board.flat[i] == 0]
-    
-    def make_move(self, position: int) -> bool:
+        return [i for i, val in enumerate(self.board) if val == 0]
+
+    def make_move(self, action: int) -> Tuple[Tuple, Optional[int], bool]:
         """
         Make a move at the specified position.
         
         Args:
-            position: Position index (0-8)
+            action: Position index (0-8)
             
         Returns:
-            True if move was valid, False otherwise.
+            Tuple of (new_board_state, winner, done)
+            - new_board_state: Updated board as tuple
+            - winner: 1 (X won), -1 (O won), 0 (draw), None (game ongoing)
+            - done: True if game is over, False otherwise
+            
+        Raises:
+            ValueError: If move is invalid (spot already taken).
         """
-        if self.game_over or position < 0 or position > 8:
-            return False
+        if self.board[action] != 0:
+            raise ValueError("Invalid move: spot already taken.")
         
-        row, col = position // 3, position % 3
+        board_list = list(self.board)
+        board_list[action] = self.current_player
+        self.board = tuple(board_list)
         
-        if self.board[row, col] != 0:
-            return False
+        # Check game state
+        winner = self.check_winner()
+        if winner is not None:
+            return self.board, winner, True  # state, winner, done
         
-        self.board[row, col] = self.current_player.value
-        self.move_count += 1
+        if 0 not in self.board:
+            return self.board, 0, True  # draw
         
-        # Check for win/draw
-        self._check_game_state()
-        
-        # Switch player
-        self.current_player = Player.O if self.current_player == Player.X else Player.X
-        
-        return True
-    
-    def _check_game_state(self) -> None:
-        """Check if game is over and determine winner."""
-        # Check rows
-        for row in self.board:
-            if row[0] == row[1] == row[2] != 0:
-                self.game_over = True
-                self.winner = Player(row[0])
-                return
-        
-        # Check columns
-        for col in range(3):
-            if self.board[0, col] == self.board[1, col] == self.board[2, col] != 0:
-                self.game_over = True
-                self.winner = Player(self.board[0, col])
-                return
-        
-        # Check diagonals
-        if self.board[0, 0] == self.board[1, 1] == self.board[2, 2] != 0:
-            self.game_over = True
-            self.winner = Player(self.board[0, 0])
-            return
-        
-        if self.board[0, 2] == self.board[1, 1] == self.board[2, 0] != 0:
-            self.game_over = True
-            self.winner = Player(self.board[0, 2])
-            return
-        
-        # Check for draw
-        if self.move_count == 9:
-            self.game_over = True
-            self.winner = None  # Draw
-    
-    def get_board_state(self) -> np.ndarray:
+        self.current_player = -self.current_player  # Switch turn
+        return self.board, None, False
+
+    def check_winner(self) -> Optional[int]:
         """
-        Get current board state as a flattened array.
+        Check if there's a winner on the current board.
         
         Returns:
-            Flattened board state (9 elements).
+            1 if X won, -1 if O won, None if no winner yet.
         """
-        return self.board.flatten().copy()
-    
-    def get_board_2d(self) -> np.ndarray:
+        win_combinations = [
+            (0, 1, 2), (3, 4, 5), (6, 7, 8),  # Rows
+            (0, 3, 6), (1, 4, 7), (2, 5, 8),  # Columns
+            (0, 4, 8), (2, 4, 6)              # Diagonals
+        ]
+        for a, b, c in win_combinations:
+            if self.board[a] == self.board[b] == self.board[c] != 0:
+                return self.board[a]
+        return None
+
+    def get_board_state(self) -> Tuple:
         """
-        Get current board state as 3x3 array.
+        Get current board state.
         
         Returns:
-            2D board state.
+            The board as a tuple.
         """
-        return self.board.copy()
-    
-    def is_game_over(self) -> bool:
-        """Check if game is over."""
-        return self.game_over
-    
-    def get_winner(self) -> Optional[Player]:
-        """
-        Get the winner.
-        
-        Returns:
-            Player.X if X won, Player.O if O won, None for draw.
-        """
-        return self.winner
-    
+        return self.board
+
     def __str__(self) -> str:
         """String representation of board."""
         symbols = {0: ' ', 1: 'X', -1: 'O'}
         lines = []
         for i in range(3):
-            row = [symbols[self.board[i, j]] for j in range(3)]
+            row = [symbols[self.board[i * 3 + j]] for j in range(3)]
             lines.append(' | '.join(row))
             if i < 2:
                 lines.append('-----------')
