@@ -164,28 +164,34 @@ class QLearningAgent:
         """Reset Q-table to empty state."""
         self.q_table = {}
 
-    def save_q_table(self, filepath: str) -> None:
+    def save_policy(self, filepath: str) -> None:
         """
-        Save Q-table to file (basic implementation).
+        Save learned policy (Q-table) to JSON file.
+        
+        Converts tuple keys to strings for JSON compatibility.
         
         Args:
-            filepath: Path to save Q-table.
+            filepath: Path to save policy file.
         """
         import json
         # Convert tuples to strings for JSON serialization
         q_table_str = {str(state): actions for state, actions in self.q_table.items()}
         with open(filepath, 'w') as f:
             json.dump(q_table_str, f, indent=2)
+        print(f"Policy saved to {filepath}")
 
-    def load_q_table(self, filepath: str) -> None:
+    def load_policy(self, filepath: str) -> None:
         """
-        Load Q-table from file (basic implementation).
+        Load learned policy (Q-table) from JSON file.
+        
+        Converts string keys back to tuples for Q-Learning.
         
         Args:
-            filepath: Path to load Q-table from.
+            filepath: Path to load policy file from.
         """
         import json
         with open(filepath, 'r') as f:
             q_table_str = json.load(f)
         # Convert strings back to tuples
         self.q_table = {eval(state_str): actions for state_str, actions in q_table_str.items()}
+        print(f"Policy loaded from {filepath}. Q-table size: {len(self.q_table)}")
