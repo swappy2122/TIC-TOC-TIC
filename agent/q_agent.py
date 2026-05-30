@@ -184,7 +184,7 @@ class QLearningAgent:
         """
         Load learned policy (Q-table) from JSON file.
         
-        Converts string keys back to tuples for Q-Learning.
+        Converts string keys back to tuples for Q-Learning and action keys back to integers.
         
         Args:
             filepath: Path to load policy file from.
@@ -192,6 +192,9 @@ class QLearningAgent:
         import json
         with open(filepath, 'r') as f:
             q_table_str = json.load(f)
-        # Convert strings back to tuples
-        self.q_table = {eval(state_str): actions for state_str, actions in q_table_str.items()}
+        # Convert strings back to tuples for states and strings back to ints for actions
+        self.q_table = {
+            eval(state_str): {int(action_str): q_val for action_str, q_val in actions.items()}
+            for state_str, actions in q_table_str.items()
+        }
         print(f"Policy loaded from {filepath}. Q-table size: {len(self.q_table)}")
