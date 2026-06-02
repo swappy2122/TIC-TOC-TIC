@@ -1,0 +1,206 @@
+/* ========================================
+   TIC-TAC-TOE | Game Board & Cell Styling
+   Glassmorphism Design with Smooth Animations
+   ======================================== */
+
+@import url('design-system.css');
+
+/* ========== BOARD WRAPPER (GLASSMORPHISM CONTAINER) ========== */
+.board-wrapper {
+  backdrop-filter: blur(16px);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-xl);
+  animation: glassPulse 3s ease-in-out infinite;
+}
+
+@keyframes glassPulse {
+  0%, 100% {
+    box-shadow: var(--shadow-xl);
+  }
+  50% {
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 212, 255, 0.1),
+      0 10px 10px -5px rgba(255, 107, 157, 0.05);
+  }
+}
+
+/* ========== GAME BOARD (3×3 GRID) ========== */
+#gameBoard {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: var(--space-2); /* 8px gap */
+  cursor: pointer;
+}
+
+/* ========== GAME CELLS ========== */
+.game-cell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color-strong);
+  border-radius: var(--radius-lg); /* 12px */
+  cursor: pointer;
+  transition: all var(--transition-base) var(--ease-out);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: var(--fw-bold);
+  font-family: var(--font-display);
+  user-select: none;
+  
+  /* Subtle inner shadow for depth */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ========== CELL HOVER EFFECTS ========== */
+.game-cell:hover:not(.disabled) {
+  transform: translateY(-2px);
+  border-color: var(--border-color);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    var(--glow-x);
+}
+
+/* Glow effect for X player turn */
+.game-cell:hover:not(.disabled).player-x-turn {
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    var(--glow-x);
+  border-color: var(--accent-x);
+}
+
+/* Glow effect for O player turn */
+.game-cell:hover:not(.disabled).player-o-turn {
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.3),
+    var(--glow-o);
+  border-color: var(--accent-o);
+}
+
+/* ========== CELL ACTIVE STATE (CLICKED) ========== */
+.game-cell.active {
+  background: rgba(255, 255, 255, 0.1);
+  cursor: default;
+}
+
+.game-cell.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== X SYMBOL (CSS CROSS) ========== */
+.game-cell.x::before,
+.game-cell.x::after {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 6px;
+  background: linear-gradient(90deg, var(--accent-x), var(--accent-x));
+  border-radius: var(--radius-full);
+  box-shadow: var(--glow-x);
+}
+
+.game-cell.x::before {
+  transform: rotate(45deg);
+  animation: popIn var(--transition-base) var(--ease-bounce);
+}
+
+.game-cell.x::after {
+  transform: rotate(-45deg);
+  animation: popIn var(--transition-base) var(--ease-bounce) 50ms;
+}
+
+/* ========== O SYMBOL (CSS RING) ========== */
+.game-cell.o {
+  overflow: hidden;
+}
+
+.game-cell.o::before {
+  content: '';
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  border: 6px solid var(--accent-o);
+  border-radius: var(--radius-full);
+  box-shadow: var(--glow-o);
+  animation: popIn var(--transition-base) var(--ease-bounce);
+}
+
+/* ========== POP-IN PLACEMENT ANIMATION ========== */
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Override rotation for popIn in O */
+.game-cell.o::before {
+  animation: popIn var(--transition-base) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Override for X animations with easing */
+.game-cell.x::before {
+  animation: popIn var(--transition-base) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.game-cell.x::after {
+  animation: popIn var(--transition-base) cubic-bezier(0.34, 1.56, 0.64, 1) 50ms;
+}
+
+/* ========== KEYBOARD FOCUS STATE ========== */
+.game-cell:focus-visible {
+  outline: 2px solid var(--accent-x);
+  outline-offset: 2px;
+}
+
+/* ========== RESPONSIVE ADJUSTMENTS ========== */
+@media (max-width: 640px) {
+  .board-wrapper {
+    padding: var(--space-6);
+  }
+
+  #gameBoard {
+    grid-template-columns: repeat(3, 80px);
+    grid-template-rows: repeat(3, 80px);
+  }
+
+  .game-cell {
+    font-size: 2rem;
+  }
+
+  .game-cell.x::before,
+  .game-cell.x::after {
+    width: 50px;
+    height: 5px;
+  }
+
+  .game-cell.o::before {
+    width: 50px;
+    height: 50px;
+    border-width: 5px;
+  }
+}
+
+/* ========== ACCESSIBILITY ========== */
+@media (prefers-reduced-motion: reduce) {
+  .board-wrapper,
+  .game-cell,
+  .game-cell.x::before,
+  .game-cell.x::after,
+  .game-cell.o::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}

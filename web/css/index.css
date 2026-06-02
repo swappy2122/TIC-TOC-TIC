@@ -98,6 +98,103 @@ p {
   margin: 0;
 }
 
+/* ========== APP HEADER ========== */
+.app-header {
+  text-align: center;
+  margin-bottom: var(--space-12);
+  animation: slideDown 0.6s var(--ease-out);
+}
+
+.app-title {
+  background: linear-gradient(135deg, var(--accent-x), var(--accent-o));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+  margin-bottom: var(--space-3);
+  letter-spacing: 0.05em;
+  font-weight: var(--fw-bold);
+}
+
+.app-subtitle {
+  font-size: var(--fs-lg);
+  color: var(--text-muted);
+  font-weight: var(--fw-regular);
+}
+
+/* ========== APP MAIN CONTENT ========== */
+.app-main {
+  display: flex;
+  gap: var(--space-12);
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-12);
+}
+
+.game-container {
+  animation: slideUp 0.6s var(--ease-out) 0.1s both;
+}
+
+/* ========== GAME SIDEBAR (STATUS) ========== */
+.game-sidebar {
+  min-width: 200px;
+  animation: slideUp 0.6s var(--ease-out) 0.2s both;
+}
+
+.game-status {
+  backdrop-filter: blur(16px);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.status-text {
+  font-size: var(--fs-base);
+  color: var(--text-primary);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-relaxed);
+}
+
+/* ========== APP FOOTER ========== */
+.app-footer {
+  margin-top: auto;
+  text-align: center;
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border-color);
+}
+
+.footer-text {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+/* ========== ANIMATIONS ========== */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ========== SCROLLBAR STYLING ========== */
 ::-webkit-scrollbar {
   width: 8px;
