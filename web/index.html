@@ -18,45 +18,110 @@
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/board.css">
   <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/menu.css">
   
   <title>TIC-TAC-TOE | Q-Learning AI Game</title>
 </head>
 <body>
   <!-- Main App Container -->
   <div id="app">
-    <!-- Header / Title Section -->
-    <header class="app-header">
-      <h1 class="app-title" data-glowing>TIC-TAC-TOE</h1>
-      <p class="app-subtitle">Play against the AI</p>
-    </header>
+    <!-- ========== START SCREEN ========== -->
+    <div id="startScreen" class="screen screen-active">
+      <!-- Menu Header -->
+      <header class="menu-header">
+        <h1 class="menu-title">TIC-TAC-TOE</h1>
+        <p class="menu-subtitle">Q-Learning AI</p>
+      </header>
 
-    <!-- Main Content Area -->
-    <main class="app-main">with Glassmorphism -->
-      <div class="game-container">
-        <div class="board-wrapper">
-          <div class="game-board" id="gameBoard">
-            <!-- 9 game cells will be rendered here -->
-          </div
-          <!-- Game cells will be rendered here -->
+      <!-- Menu Content -->
+      <main class="menu-main">
+        <!-- Mode Selection -->
+        <section class="mode-section" id="modeSection">
+          <h2 class="section-title">Select Game Mode</h2>
+          
+          <div class="mode-cards">
+            <!-- VS AI Card -->
+            <button class="mode-card" data-mode="ai" aria-label="Play against AI">
+              <span class="mode-icon">🤖</span>
+              <span class="mode-label">vs AI</span>
+              <span class="mode-desc">Challenge the Q-Learning Agent</span>
+            </button>
+
+            <!-- VS Human Card -->
+            <button class="mode-card" data-mode="human" aria-label="Play against human">
+              <span class="mode-icon">👥</span>
+              <span class="mode-label">vs Human</span>
+              <span class="mode-desc">Play with a friend</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Symbol Selection (hidden until mode chosen) -->
+        <section class="symbol-section" id="symbolSection" style="display: none;">
+          <h2 class="section-title">Choose Your Symbol</h2>
+          
+          <div class="symbol-picker">
+            <!-- X Button -->
+            <button class="symbol-button" data-symbol="1" aria-label="Play as X">
+              <span class="symbol-text">X</span>
+            </button>
+
+            <!-- O Button -->
+            <button class="symbol-button" data-symbol="-1" aria-label="Play as O">
+              <span class="symbol-text">O</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Play Button (hidden until symbol chosen) -->
+        <div class="play-button-container" id="playButtonContainer" style="display: none;">
+          <button id="playButton" class="play-button">Start Game</button>
         </div>
-      </div>
+      </main>
 
-      <!-- Game Status / Info Section -->
-      <aside class="game-sidebar">
-        <div class="game-status" id="gameStatus">
-          <p class="status-text">Initializing game...</p>
+      <!-- Menu Footer -->
+      <footer class="menu-footer">
+        <p class="menu-footer-text">Pure vanilla JS • Q-Learning powered</p>
+      </footer>
+    </div>
+
+    <!-- ========== GAME SCREEN ========== -->
+    <div id="gameScreen" class="screen">
+      <!-- Header / Title Section -->
+      <header class="app-header">
+        <h1 class="app-title">TIC-TAC-TOE</h1>
+        <p class="app-subtitle" id="gameSubtitle">vs AI</p>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="app-main">
+        <!-- Game Board Container with Glassmorphism -->
+        <div class="game-container">
+          <div class="board-wrapper">
+            <div class="game-board" id="gameBoard">
+              <!-- 9 game cells will be rendered here -->
+            </div>
+          </div>
         </div>
-      </aside>
-    </main>
 
-    <!-- Footer -->
-    <footer class="app-footer">
-      <p class="footer-text">Powered by Q-Learning Agent</p>
-    </footer>
+        <!-- Game Status / Info Section -->
+        <aside class="game-sidebar">
+          <div class="game-status" id="gameStatus">
+            <p class="status-text">Starting game...</p>
+          </div>
+          <button id="resetButton" class="reset-button">New Game</button>
+        </aside>
+      </main>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <p class="footer-text">Powered by Q-Learning Agent</p>
+      </footer>
+    </div>
   </div>
 
-  <!-- Scripts -->game-engine.js" defer></script>
-  <script src="js/
+  <!-- Scripts -->
+  <script src="js/game-engine.js" defer></script>
   <script src="js/app.js" defer></script>
 </body>
 </html>
