@@ -1,0 +1,220 @@
+/* ========================================
+   TIC-TAC-TOE | Game Animations
+   Win Celebrations, Invalid Move Feedback, Confetti
+   ======================================== */
+
+/* ========== WIN CELL PULSING GLOW ========== */
+.game-cell.win {
+  animation: winPulse 0.6s ease-in-out infinite;
+}
+
+@keyframes winPulse {
+  0%, 100% {
+    box-shadow: 
+      inset 0 2px 4px rgba(0, 0, 0, 0.3),
+      0 0 25px rgba(0, 255, 136, 0.6);
+  }
+  50% {
+    box-shadow: 
+      inset 0 2px 4px rgba(0, 0, 0, 0.3),
+      0 0 40px rgba(0, 255, 136, 0.9),
+      0 0 60px rgba(0, 255, 136, 0.5);
+  }
+}
+
+/* ========== WINNING LINE ANIMATION ========== */
+.winning-line {
+  position: absolute;
+  background: linear-gradient(90deg, transparent, var(--accent-win), transparent);
+  z-index: 10;
+  animation: winLineGlow 0.8s ease-in-out infinite;
+}
+
+@keyframes winLineGlow {
+  0%, 100% {
+    opacity: 0.4;
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+/* Horizontal line */
+.winning-line.horizontal {
+  height: 4px;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  animation: winLineGlow 0.8s ease-in-out infinite, slideHorizontal 0.6s ease-out;
+}
+
+@keyframes slideHorizontal {
+  from {
+    width: 0;
+  }
+  to {
+    width: 320px;
+  }
+}
+
+/* Vertical line */
+.winning-line.vertical {
+  width: 4px;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  animation: winLineGlow 0.8s ease-in-out infinite, slideVertical 0.6s ease-out;
+}
+
+@keyframes slideVertical {
+  from {
+    height: 0;
+  }
+  to {
+    height: 320px;
+  }
+}
+
+/* Diagonal line (top-left to bottom-right) */
+.winning-line.diagonal-tlbr {
+  width: 4px;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%) rotate(45deg);
+  animation: winLineGlow 0.8s ease-in-out infinite, slideDiagonal 0.6s ease-out;
+}
+
+/* Diagonal line (top-right to bottom-left) */
+.winning-line.diagonal-trbl {
+  width: 4px;
+  left: 50%;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%) rotate(-45deg);
+  animation: winLineGlow 0.8s ease-in-out infinite, slideDiagonal 0.6s ease-out;
+}
+
+@keyframes slideDiagonal {
+  from {
+    height: 0;
+  }
+  to {
+    height: 452px; /* Diagonal of 320×320 square */
+  }
+}
+
+/* ========== INVALID MOVE FEEDBACK ========== */
+.game-cell.shake {
+  animation: cellShake 0.4s ease-in-out;
+}
+
+@keyframes cellShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10% {
+    transform: translateX(-4px);
+  }
+  20% {
+    transform: translateX(4px);
+  }
+  30% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  50% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(0);
+  }
+}
+
+/* ========== CONFETTI ANIMATION ========== */
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.confetti::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: fall 2s ease-in forwards;
+}
+
+@keyframes fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) translateX(var(--tx, 0px)) rotate(360deg);
+  }
+}
+
+/* Confetti color variations */
+.confetti.cyan::before {
+  background: var(--accent-x);
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
+}
+
+.confetti.pink::before {
+  background: var(--accent-o);
+  box-shadow: 0 0 10px rgba(255, 107, 157, 0.6);
+}
+
+.confetti.green::before {
+  background: var(--accent-win);
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+}
+
+/* ========== GAME OVER STATE ========== */
+.game-board.game-over .game-cell:not(.active):not(.win) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========== VICTORY SCREEN PULSE ========== */
+.status-text.victory {
+  animation: victoryPulse 0.5s ease-in-out;
+  color: var(--accent-win);
+}
+
+.status-text.draw {
+  animation: victoryPulse 0.5s ease-in-out;
+  color: var(--accent-draw);
+}
+
+@keyframes victoryPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* ========== ACCESSIBILITY ========== */
+@media (prefers-reduced-motion: reduce) {
+  .game-cell.win,
+  .winning-line,
+  .confetti::before,
+  .status-text.victory,
+  .status-text.draw {
+    animation: none !important;
+  }
+
+  .game-cell.shake {
+    opacity: 0.7;
+  }
+}

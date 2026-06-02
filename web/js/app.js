@@ -1,9 +1,9 @@
 /**
  * TIC-TAC-TOE | Web Application
- * Day 2: Interactive Game Board
+ * Day 3: Full Game Logic with Win Detection & Animations
  * 
- * Implements interactive 3×3 game board with turn tracking,
- * cell placement, and two-player local mode.
+ * Integrates GameEngine for core logic.
+ * Handles UI rendering, animations, and celebrations.
  */
 
 // ========== DOM REFERENCES ==========
@@ -14,138 +14,27 @@ const appHeader = document.querySelector('.app-header');
 const appTitle = document.querySelector('.app-title');
 
 // ========== APPLICATION STATE ==========
+const gameEngine = new GameEngine();
 const appState = {
-  gameActive: true,
-  currentPlayer: 'X', // Starts with X
-  board: [null, null, null, null, null, null, null, null, null],
-  gameOver: false,
-  winner: null,
-  gameHistory: [],
   statistics: {
     xWins: 0,
     oWins: 0,
     draws: 0,
   },
+  animating: false,
 };
 
-// ========== GAME LOGIC ==========
+// ========== RENDERING ==========
 /**
- * Check if the board is full (draw condition)
- */
-function isBoardFull() {
-  return appState.board.every(cell => cell !== null);
-}
-
-/**
- * Check for winner
- * @returns {string|null} - 'X', 'O', or null if no winner
- */
-function checkWinner() {
-  const winPatterns = [
-    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
-    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
-    [0, 4, 8], [2, 4, 6],             // Diagonals
-  ];
-
-  for (const pattern of winPatterns) {
-    const [a, b, c] = pattern;
-    if (
-      appState.board[a] &&
-      appState.board[a] === appState.board[b] &&
-      appState.board[a] === appState.board[c]
-    ) {
-      return appState.board[a];
-    }
-  }
-  return null;
-}
-
-/**
- * Switch the current player
- */
-function switchPlayer() {
-  appState.currentPlayer = appState.currentPlayer === 'X' ? 'O' : 'X';
-}
-
-/**
- * Make a move on the board
- * @param {number} index - Cell index (0-8)
- * @returns {boolean} - True if move was valid, false otherwise
- */
-function makeMove(index) {
-  // Check if move is valid
-  if (appState.board[index] !== null || appState.gameOver) {
-    return false;
-  }
-
-  // Place the current player's symbol
-  appState.board[index] = appState.currentPlayer;
-  console.log(`[Game] ${appState.currentPlayer} placed at cell ${index}`);
-
-  // Check for winner
-  const winner = checkWinner();
-  if (winner) {
-    appState.gameOver = true;
-    appState.winner = winner;
-    appState.statistics[winner === 'X' ? 'xWins' : 'oWins']++;
-    updateGameStatus(`🎉 Player ${winner} wins!`);
-    console.log(`[Game] Player ${winner} wins!`);
-    return true;
-  }
-
-  // Check for draw
-  if (isBoardFull()) {
-    appState.gameOver = true;
-    appState.statistics.draws++;
-    updateGameStatus('🤝 It\'s a draw!');
-    console.log('[Game] Draw!');
-    return true;
-  }
-
-  // Switch player
-  switchPlayer();
-  updateGameStatus(`Player ${appState.currentPlayer}'s turn`);
-  updateBoardGlow();
-  return true;
-}
-
-/**
- * Reset the game board
- */
-function resetGame() {
-  appState.board = [null, null, null, null, null, null, null, null, null];
-  appState.currentPlayer = 'X';
-  appState.gameOver = false;
-  appState.winner = null;
-  renderGameBoard();
-  attachEventListeners();
-  updateBoardGlow();
-  updateGameStatus(`Player ${appState.currentPlayer}'s turn`);
-  console.log('[Game] Game reset');
-}
-
-// ========== UI UPDATES ==========
-/**
- * Update board cell glow based on whose turn it is
- */
-function updateBoardGlow() {
-  const cells = document.querySelectorAll('.game-cell');
-  cells.forEach(cell => {
-    cell.classList.remove('player-x-turn', 'player-o-turn');
-    if (!appState.gameOver && cell.textContent === '') {
-      const turnClass = appState.currentPlayer === 'X' ? 'player-x-turn' : 'player-o-turn';
-      cell.classList.add(turnClass);
-    }
-  });
-}
-
-/**
- * Render the game board grid with current state
+ * Render the game board based on engine state
  */
 function renderGameBoard() {
-  gameBoard.innerHTML = ''; // Clear existing content
+  gameBoard.innerHTML = '';
+  gameBoard.classList.remove('game-over');
 
-  // Create 9 cells based on board state
+  const state = gameEngine.getState();
+
+  // Create 9 cells
   for (let i = 0; i < 9; i++) {
     const cell = document.createElement('div');
     cell.className = 'game-cell';
@@ -154,27 +43,144 @@ function renderGameBoard() {
     cell.setAttribute('tabindex', '0');
     cell.setAttribute('aria-label', `Cell ${i + 1}`);
 
-    // Add X or O class if cell is occupied
-    if (appState.board[i] === 'X') {
+    // Add symbol if occupied
+    const symbol = state.board[i];
+    if (symbol === 1) {
       cell.classList.add('x', 'active');
-    } else if (appState.board[i] === 'O') {
+    } else if (symbol === -1) {
       cell.classList.add('o', 'active');
     }
 
     gameBoard.appendChild(cell);
   }
 
-  console.log('[Board] Game board rendered with current state');
+  // Update turn-based glow for available cells
+  updateBoardGlow();
+
+  console.log('[Render] Board updated');
+}
+
+/**
+ * Update board cell glow based on current player
+ */
+function updateBoardGlow() {
+  if (gameEngine.gameOver) return;
+
+  const cells = document.querySelectorAll('.game-cell');
+  const playerClass = gameEngine.currentPlayer === 1 ? 'player-x-turn' : 'player-o-turn';
+
+  cells.forEach(cell => {
+    cell.classList.remove('player-x-turn', 'player-o-turn');
+    if (!cell.classList.contains('active')) {
+      cell.classList.add(playerClass);
+    }
+  });
+}
+
+/**
+ * Highlight winning cells and draw winning line
+ */
+function celebrateWin() {
+  const winningCombo = gameEngine.getWinningCombo();
+  if (!winningCombo) return;
+
+  const cells = document.querySelectorAll('.game-cell');
+  const winnerSymbol = gameEngine.winner === 1 ? 'X' : 'O';
+
+  // Add win class to winning cells
+  winningCombo.forEach(index => {
+    cells[index].classList.add('win');
+  });
+
+  // Draw winning line
+  drawWinningLine(winningCombo);
+
+  // Trigger confetti
+  triggerConfetti(winnerSymbol);
+
+  // Update status with celebration
+  const winnerName = gameEngine.winner === 1 ? 'X' : 'O';
+  updateGameStatus(`🎉 Player ${winnerName} wins!`, 'victory');
+
+  console.log('[Celebration] Win animated');
+}
+
+/**
+ * Celebrate draw
+ */
+function celebrateDraw() {
+  updateGameStatus('🤝 It\'s a draw!', 'draw');
+  triggerConfetti('draw');
+  console.log('[Celebration] Draw animated');
+}
+
+/**
+ * Draw an animated line across winning combination
+ * @param {number[]} combo - Indices of winning cells
+ */
+function drawWinningLine(combo) {
+  const [a, b, c] = combo;
+  const line = document.createElement('div');
+  line.className = 'winning-line';
+
+  // Determine line orientation
+  // Rows: 0-2, 3-5, 6-8
+  if ((a === 0 && b === 1 && c === 2) || (a === 3 && b === 4 && c === 5) || (a === 6 && b === 7 && c === 8)) {
+    line.classList.add('horizontal');
+  }
+  // Columns: 0-3-6, 1-4-7, 2-5-8
+  else if ((a === 0 && b === 3 && c === 6) || (a === 1 && b === 4 && c === 7) || (a === 2 && b === 5 && c === 8)) {
+    line.classList.add('vertical');
+  }
+  // Diagonal: 0-4-8
+  else if (a === 0 && b === 4 && c === 8) {
+    line.classList.add('diagonal-tlbr');
+  }
+  // Diagonal: 2-4-6
+  else if (a === 2 && b === 4 && c === 6) {
+    line.classList.add('diagonal-trbl');
+  }
+
+  gameBoard.appendChild(line);
+}
+
+/**
+ * Trigger confetti animation
+ * @param {string} type - 'X', 'O', or 'draw'
+ */
+function triggerConfetti(type) {
+  const colors = type === 'X' ? ['cyan'] : type === 'O' ? ['pink'] : ['cyan', 'pink', 'green'];
+  const count = 30;
+
+  for (let i = 0; i < count; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = `confetti ${colors[i % colors.length]}`;
+
+    const x = Math.random() * window.innerWidth;
+    const y = Math.random() * window.innerHeight - window.innerHeight;
+    const tx = (Math.random() - 0.5) * 200;
+
+    confetti.style.left = x + 'px';
+    confetti.style.top = y + 'px';
+    confetti.style.setProperty('--tx', tx + 'px');
+
+    document.body.appendChild(confetti);
+
+    // Remove after animation
+    setTimeout(() => confetti.remove(), 2000);
+  }
 }
 
 /**
  * Update game status display
- * @param {string} message - Status message to display
+ * @param {string} message - Status message
+ * @param {string} type - 'victory', 'draw', or null
  */
-function updateGameStatus(message) {
+function updateGameStatus(message, type = null) {
   const statusText = gameStatus.querySelector('.status-text') || 
                      document.createElement('p');
   statusText.className = 'status-text';
+  if (type) statusText.classList.add(type);
   statusText.textContent = message;
 
   if (!statusText.parentElement) {
@@ -184,13 +190,93 @@ function updateGameStatus(message) {
   console.log(`[Status] ${message}`);
 }
 
+/**
+ * Handle invalid move with shake animation
+ * @param {number} index - Cell index
+ */
+function handleInvalidMove(index) {
+  const cell = document.querySelector(`[data-index="${index}"]`);
+  cell.classList.add('shake');
+
+  setTimeout(() => {
+    cell.classList.remove('shake');
+  }, 400);
+
+  console.log('[Game] Invalid move attempted');
+}
+
+// ========== GAME MANAGEMENT ==========
+/**
+ * Make a move and update UI
+ * @param {number} index - Cell index
+ */
+function playMove(index) {
+  if (appState.animating || gameEngine.gameOver) return;
+
+  const success = gameEngine.makeMove(index);
+
+  if (!success) {
+    handleInvalidMove(index);
+    return;
+  }
+
+  // Update board display
+  const cells = document.querySelectorAll('.game-cell');
+  const symbol = gameEngine.board[index];
+  if (symbol === 1) {
+    cells[index].classList.add('x', 'active');
+  } else if (symbol === -1) {
+    cells[index].classList.add('o', 'active');
+  }
+
+  // Check game state
+  if (gameEngine.gameOver) {
+    gameBoard.classList.add('game-over');
+    appState.animating = true;
+
+    setTimeout(() => {
+      if (gameEngine.winner === null) {
+        // Draw
+        appState.statistics.draws++;
+        celebrateDraw();
+      } else {
+        // Win
+        if (gameEngine.winner === 1) {
+          appState.statistics.xWins++;
+        } else {
+          appState.statistics.oWins++;
+        }
+        celebrateWin();
+      }
+      appState.animating = false;
+    }, 100);
+
+    console.log(`[Game] Game over. Winner: ${gameEngine.winner}`);
+  } else {
+    // Continue playing
+    updateBoardGlow();
+    updateGameStatus(`Player ${gameEngine.currentPlayer === 1 ? 'X' : 'O'}'s turn`);
+  }
+}
+
+/**
+ * Reset game to play again
+ */
+function resetGame() {
+  gameEngine.reset();
+  appState.animating = false;
+  renderGameBoard();
+  updateGameStatus(`Player ${gameEngine.currentPlayer === 1 ? 'X' : 'O'}'s turn`);
+  console.log('[Game] New game started');
+}
+
 // ========== EVENT HANDLERS ==========
 /**
- * Attach event listeners to interactive elements
+ * Attach event listeners to game cells
  */
 function attachEventListeners() {
   const cells = document.querySelectorAll('.game-cell');
-  cells.forEach((cell) => {
+  cells.forEach(cell => {
     cell.addEventListener('click', handleCellClick);
     cell.addEventListener('keydown', handleCellKeydown);
   });
@@ -199,26 +285,18 @@ function attachEventListeners() {
 }
 
 /**
- * Handle cell click events
- * @param {Event} event - Click event
+ * Handle cell click
+ * @param {Event} event
  */
 function handleCellClick(event) {
   const cell = event.currentTarget;
   const index = parseInt(cell.dataset.index, 10);
-
-  if (makeMove(index)) {
-    // Update the cell with the new symbol
-    if (appState.board[index] === 'X') {
-      cell.classList.add('x', 'active');
-    } else if (appState.board[index] === 'O') {
-      cell.classList.add('o', 'active');
-    }
-  }
+  playMove(index);
 }
 
 /**
- * Handle cell keyboard events (Enter, Space)
- * @param {KeyboardEvent} event - Keyboard event
+ * Handle cell keyboard interaction
+ * @param {KeyboardEvent} event
  */
 function handleCellKeydown(event) {
   if (event.key === 'Enter' || event.key === ' ') {
@@ -228,7 +306,7 @@ function handleCellKeydown(event) {
 }
 
 /**
- * Log design system tokens to console for verification
+ * Log design system tokens (for verification)
  */
 function logDesignTokens() {
   const root = document.documentElement;
@@ -238,8 +316,7 @@ function logDesignTokens() {
   console.log('Primary Background:', computedStyle.getPropertyValue('--bg-primary').trim());
   console.log('Accent X (Cyan):', computedStyle.getPropertyValue('--accent-x').trim());
   console.log('Accent O (Pink):', computedStyle.getPropertyValue('--accent-o').trim());
-  console.log('Display Font:', computedStyle.getPropertyValue('--font-display').trim());
-  console.log('Body Font:', computedStyle.getPropertyValue('--font-body').trim());
+  console.log('Win Accent (Green):', computedStyle.getPropertyValue('--accent-win').trim());
   console.groupEnd();
 }
 
@@ -250,20 +327,10 @@ function logDesignTokens() {
 function initializeApp() {
   console.log('[App] Initializing Tic-Tac-Toe Web Application');
 
-  // Log design system tokens
   logDesignTokens();
-
-  // Set up game board UI
   renderGameBoard();
-
-  // Apply turn-based glow
-  updateBoardGlow();
-
-  // Initialize status display
-  updateGameStatus(`Player ${appState.currentPlayer}'s turn`);
-
-  // Set up event listeners
   attachEventListeners();
+  updateGameStatus(`Player X's turn`);
 
   console.log('[App] Application initialized successfully');
 }
@@ -271,8 +338,8 @@ function initializeApp() {
 // ========== APPLICATION START ==========
 document.addEventListener('DOMContentLoaded', initializeApp);
 
-// Export state and functions for debugging
+// Export for debugging
+window.gameEngine = gameEngine;
 window.appState = appState;
-window.updateGameStatus = updateGameStatus;
 window.resetGame = resetGame;
-window.makeMove = makeMove;
+window.playMove = playMove;
