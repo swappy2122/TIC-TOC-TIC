@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TIC-TAC-TOE | Play against an AI opponent powered by Q-Learning. Experience stunning animations and sleek dark-mode gaming.">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="color-scheme" content="dark">
+  
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Google Fonts: Inter (body) + Outfit (display) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/index.css">
+  
+  <title>TIC-TAC-TOE | Q-Learning AI Game</title>
+</head>
+<body>
+  <!-- Main App Container -->
+  <div id="app">
+    <!-- Header / Title Section -->
+    <header class="app-header">
+      <h1 class="app-title" data-glowing>TIC-TAC-TOE</h1>
+      <p class="app-subtitle">Play against the AI</p>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- Game Board Container (placeholder for now) -->
+      <div class="game-container">
+        <div class="game-board" id="gameBoard">
+          <!-- Game cells will be rendered here -->
+        </div>
+      </div>
+
+      <!-- Game Status / Info Section -->
+      <aside class="game-sidebar">
+        <div class="game-status" id="gameStatus">
+          <p class="status-text">Initializing game...</p>
+        </div>
+      </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p class="footer-text">Powered by Q-Learning Agent</p>
+    </footer>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/app.js" defer></script>
+</body>
+</html>

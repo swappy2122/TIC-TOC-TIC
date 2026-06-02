@@ -1,0 +1,141 @@
+/* ========================================
+   TIC-TAC-TOE | Root Layout & Global Styles
+   ======================================== */
+
+@import url('design-system.css');
+
+/* ========== RESET & BASE STYLES ========== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  font-weight: var(--fw-regular);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* ========== BACKGROUND & DARK MODE ========== */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    rgba(10, 14, 26, 1) 0%,
+    rgba(30, 10, 40, 0.4) 25%,
+    rgba(10, 26, 30, 0.3) 75%,
+    rgba(10, 14, 26, 1) 100%
+  );
+  pointer-events: none;
+  z-index: -2;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 212, 255, 0.03) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ========== ROOT LAYOUT ========== */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  position: relative;
+  z-index: 1;
+}
+
+/* ========== TYPOGRAPHY ========== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+}
+
+h1 {
+  font-size: var(--fs-5xl);
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: var(--fs-4xl);
+}
+
+h3 {
+  font-size: var(--fs-3xl);
+}
+
+p {
+  margin: 0;
+}
+
+/* ========== SCROLLBAR STYLING ========== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-x);
+}
+
+/* ========== FOCUS STATES ========== */
+:focus-visible {
+  outline: 2px solid var(--accent-x);
+  outline-offset: 2px;
+}
+
+/* ========== SELECTION ========== */
+::selection {
+  background-color: var(--accent-x);
+  color: var(--bg-primary);
+}
+
+/* ========== RESPONSIVE UTILITIES ========== */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
+  #app {
+    padding: var(--space-3);
+  }
+}
