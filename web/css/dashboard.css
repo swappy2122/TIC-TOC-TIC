@@ -1,0 +1,234 @@
+/* ========================================
+   TIC-TAC-TOE | Q-Learning AI Brain Dashboard
+   ======================================== */
+
+.ai-brain-card {
+  margin-top: var(--space-2);
+}
+
+/* Accordion Header */
+.collapsible {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.collapsible .collapse-icon {
+  font-size: var(--fs-xs);
+  transition: transform var(--transition-base) var(--ease-out);
+  color: var(--text-muted);
+}
+
+.collapsible.collapsed .collapse-icon {
+  transform: rotate(-90deg);
+}
+
+/* Expandable content area */
+.ai-brain-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 800px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height var(--transition-slow) ease-out, opacity var(--transition-slow) ease-out, padding var(--transition-slow) ease-out;
+  padding-top: var(--space-2);
+}
+
+.ai-brain-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  pointer-events: none;
+}
+
+/* Sub-section headers */
+.sub-section-title {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-2);
+  font-family: var(--font-display);
+}
+
+/* 3x3 Heatmap Grid */
+.heatmap-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 36px);
+  grid-template-rows: repeat(3, 36px);
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  padding: 6px;
+  border-radius: var(--radius-md);
+  margin: var(--space-2) 0;
+}
+
+.heatmap-cell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: help;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.heatmap-cell:hover {
+  transform: scale(1.15);
+  border-color: var(--text-primary);
+  z-index: 10;
+}
+
+/* AI Chosen Best Move highlighting */
+.heatmap-cell.best-move {
+  border: 2px solid var(--accent-win) !important;
+  box-shadow: 0 0 10px var(--accent-win);
+  animation: pulseBestMove 1.5s infinite alternate;
+}
+
+@keyframes pulseBestMove {
+  from {
+    box-shadow: 0 0 4px var(--accent-win);
+  }
+  to {
+    box-shadow: 0 0 12px var(--accent-win);
+  }
+}
+
+.heatmap-cell.occupied {
+  cursor: not-allowed;
+}
+
+/* Confidence Indicator */
+.confidence-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.confidence-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+#confidenceValue {
+  color: var(--accent-win);
+  font-weight: var(--fw-bold);
+  font-family: var(--font-display);
+}
+
+.confidence-bar-wrapper {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.confidence-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-o), var(--accent-win));
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow) cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Decision Logs List */
+.log-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.decision-log {
+  background: rgba(10, 14, 26, 0.4);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 120px;
+  min-height: 70px;
+  overflow-y: auto;
+}
+
+.log-item {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  line-height: var(--lh-normal);
+  padding-bottom: var(--space-1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  animation: fadeInLog 0.3s ease-out;
+}
+
+.log-item:last-child {
+  border-bottom: none;
+}
+
+@keyframes fadeInLog {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.log-empty {
+  font-size: var(--fs-xs);
+  color: var(--text-disabled);
+  text-align: center;
+  padding-top: var(--space-3);
+  font-style: italic;
+}
+
+/* Tooltip Styling */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  background: rgba(10, 14, 26, 0.95);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-1) var(--space-2);
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+
+[data-tooltip]:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* Ensure tooltips do not crop in sidebars */
+.mini-grid [data-tooltip]::before {
+  bottom: 130%;
+}

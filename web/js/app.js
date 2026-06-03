@@ -128,6 +128,13 @@ function startGame() {
     // Display stats and configure labels
     updateStatsUI(false);
     
+    // Configure AI Brain card visibility
+    const aiBrainCard = document.getElementById('aiBrainCard');
+    if (aiBrainCard) {
+      aiBrainCard.style.display = appState.gameMode === 'ai' ? 'block' : 'none';
+    }
+    AIVisualizer.reset();
+    
     // Update subtitle based on mode
     gameSubtitle.textContent = appState.gameMode === 'ai' ? 'vs AI' : 'vs Human';
     
@@ -166,6 +173,9 @@ function returnToMenu() {
   symbolButtons.forEach(btn => btn.classList.remove('selected'));
   symbolSection.style.display = 'none';
   playButtonContainer.style.display = 'none';
+  
+  // Reset visualizer
+  AIVisualizer.reset();
   
   // Transition back to menu
   gameScreen.classList.remove('screen-active');
@@ -444,6 +454,36 @@ function endCurrentGame() {
 }
 
 /**
+ * Display Q-value tooltips on hover for empty cells on the main game board
+ */
+function showMainBoardTooltips() {
+  if (appState.gameMode !== 'ai') return;
+  const availableActions = gameEngine.getAvailableActions();
+  const qValues = qAgent.getQValues(gameEngine.board, availableActions);
+  
+  const cells = document.querySelectorAll('.game-cell');
+  cells.forEach((cell, i) => {
+    const isOccupied = gameEngine.board[i] !== 0;
+    if (isOccupied) {
+      cell.setAttribute('data-tooltip', 'Occupied');
+    } else {
+      const qVal = qValues[i] !== undefined ? qValues[i] : 0.0;
+      cell.setAttribute('data-tooltip', `Q = ${qVal.toFixed(3)}`);
+    }
+  });
+}
+
+/**
+ * Remove Q-value tooltips from the main game board
+ */
+function clearMainBoardTooltips() {
+  const cells = document.querySelectorAll('.game-cell');
+  cells.forEach(cell => {
+    cell.removeAttribute('data-tooltip');
+  });
+}
+
+/**
  * Triggers the AI to calculate and play a move
  */
 function makeAIMove() {
@@ -457,23 +497,33 @@ function makeAIMove() {
   appState.animating = true;
   updateGameStatus('🤖 AI is thinking...', 'thinking');
 
+  // Trigger hover tooltips on game board
+  showMainBoardTooltips();
+
   const delay = Math.floor(Math.random() * 300) + 300;
 
   setTimeout(() => {
     if (gameEngine.gameOver) {
+      clearMainBoardTooltips();
       appState.animating = false;
       return;
     }
 
     const availableActions = gameEngine.getAvailableActions();
     if (availableActions.length === 0) {
+      clearMainBoardTooltips();
       appState.animating = false;
       return;
     }
 
-    const chosenAction = qAgent.chooseAction(gameEngine.board, availableActions);
+    // Capture board snapshot and corresponding Q-values before making the move
+    const boardState = [...gameEngine.board];
+    const qValues = qAgent.getQValues(boardState, availableActions);
+
+    const chosenAction = qAgent.chooseAction(boardState, availableActions);
     if (chosenAction === null || chosenAction === undefined) {
       console.error('[AI] Chosen action was invalid or null');
+      clearMainBoardTooltips();
       appState.animating = false;
       return;
     }
@@ -481,9 +531,18 @@ function makeAIMove() {
     const success = gameEngine.makeMove(chosenAction);
     if (!success) {
       console.error('[AI] Failsafe: AI move rejected by engine');
+      clearMainBoardTooltips();
       appState.animating = false;
       return;
     }
+
+    // Render visualizer components
+    AIVisualizer.renderHeatmap(boardState, availableActions, qValues, chosenAction);
+    AIVisualizer.updateConfidence(qValues, availableActions);
+    AIVisualizer.appendDecisionLog(chosenAction, qValues, availableActions);
+
+    // Clear board hover tooltips
+    clearMainBoardTooltips();
 
     const cells = document.querySelectorAll('.game-cell');
     const cell = cells[chosenAction];
@@ -814,6 +873,7 @@ function initializeApp() {
   logDesignTokens();
   initializeMenu();
   loadStats(); // Load previous stats
+  AIVisualizer.init(); // Initialize visualization toggles
 
   // Load pre-trained Q-table and initialize the AI agent
   QTableLoader.load()
