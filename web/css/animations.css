@@ -217,4 +217,104 @@
   .game-cell.shake {
     opacity: 0.7;
   }
+  
+  .status-text.thinking::after {
+    animation: none !important;
+    width: 3ch;
+  }
+  
+  .game-cell.ai-move.o::before,
+  .game-cell.ai-move.x::before,
+  .game-cell.ai-move.x::after {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  
+  .scanline-overlay::before {
+    animation: none !important;
+  }
 }
+
+/* ========== AI MOVE CUSTOM ANIMATIONS & EFFECTS ========== */
+
+/* 1. Pulsing dots thinking animation */
+.status-text.thinking {
+  color: var(--accent-o);
+  font-style: italic;
+  display: inline-flex;
+  align-items: center;
+}
+
+.status-text.thinking::after {
+  content: '...';
+  display: inline-block;
+  width: 0ch;
+  animation: pulsingDots 1.5s steps(4, end) infinite;
+  overflow: hidden;
+  vertical-align: bottom;
+  text-align: left;
+}
+
+@keyframes pulsingDots {
+  to {
+    width: 3ch;
+  }
+}
+
+/* 2. AI slide-in animations (replaces popIn) */
+.game-cell.ai-move.o::before {
+  animation: slideInO 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+.game-cell.ai-move.x::before {
+  animation: slideInXBefore 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+}
+
+.game-cell.ai-move.x::after {
+  animation: slideInXAfter 0.4s cubic-bezier(0.25, 1, 0.5, 1) 50ms forwards !important;
+}
+
+@keyframes slideInO {
+  0% {
+    transform: translateY(-20px) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInXBefore {
+  0% {
+    transform: translateY(-20px) rotate(45deg) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(45deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInXAfter {
+  0% {
+    transform: translateY(-20px) rotate(-45deg) scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(-45deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 3. Subtle robot scanline movement */
+@keyframes scanlineMove {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(50%);
+  }
+}
+
