@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="css/menu.css">
   <link rel="stylesheet" href="css/stats.css">
   <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/game-over.css">
   
   <title>TIC-TAC-TOE | Q-Learning AI Game</title>
 </head>
@@ -232,6 +233,45 @@
       <footer class="app-footer">
         <p class="footer-text">Powered by Q-Learning Agent</p>
       </footer>
+    </div>
+  </div>
+
+  <!-- ========== GAME OVER OVERLAY ========== -->
+  <div id="gameOverOverlay" class="game-over-overlay">
+    <div class="game-over-card" id="gameOverCard">
+      <div class="game-over-result">
+        <span class="result-emoji" id="resultEmoji">🎉</span>
+        <h2 class="result-title" id="resultTitle">You Win!</h2>
+      </div>
+      
+      <!-- Mini Board Showing Final State -->
+      <div class="mini-board" id="gameOverMiniBoard">
+        <!-- JS will render the 9 cells of final state -->
+      </div>
+      
+      <!-- Game Stats Summary -->
+      <div class="game-over-stats">
+        <div class="go-stat-item">
+          <span class="go-stat-label">Moves Made</span>
+          <span class="go-stat-value" id="goMovesCount">0</span>
+        </div>
+        <div class="go-stat-item">
+          <span class="go-stat-label">Time Played</span>
+          <span class="go-stat-value" id="goTimePlayed">0s</span>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="game-over-actions">
+        <button id="rematchButton" class="go-btn rematch-btn">
+          <span class="btn-icon">🔄</span> Rematch
+        </button>
+        <button id="menuButton" class="go-btn menu-btn">
+          <span class="btn-icon">🏠</span> Menu
+        </button>
+      </div>
+      
+      <a href="#" id="viewStatsLink" class="view-stats-link">📊 View Stats</a>
     </div>
   </div>
 

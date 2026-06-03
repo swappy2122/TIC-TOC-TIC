@@ -53,6 +53,7 @@ const appState = {
   },
   movesCount: 0,
   animating: false,
+  roundStartTime: null,
 };
 
 // ========== MENU MANAGEMENT ==========
@@ -125,6 +126,9 @@ function startGame() {
     appState.movesCount = 0;
     document.getElementById('moveCounter').textContent = '0 / 9';
     
+    // Track start time
+    appState.roundStartTime = Date.now();
+    
     // Display stats and configure labels
     updateStatsUI(false);
     
@@ -167,6 +171,9 @@ function returnToMenu() {
   appState.playerSymbol = null;
   gameEngine.reset();
   appState.animating = false;
+  
+  // Hide game-over screen if visible
+  hideGameOverScreen();
   
   // Reset menu UI
   modeCards.forEach(card => card.classList.remove('selected'));
@@ -396,7 +403,7 @@ function endCurrentGame() {
   stats.gamesPlayed++;
 
   let result = 'draw';
-  if (winner !== null) {
+  if (winner !== null && winner !== 0) {
     let isHumanWinner = false;
     if (mode === 'ai') {
       isHumanWinner = (winner === appState.playerSymbol);
@@ -443,13 +450,18 @@ function endCurrentGame() {
 
   // Show celebration/UI updates
   setTimeout(() => {
-    if (winner === null) {
+    if (winner === null || winner === 0) {
       celebrateDraw();
     } else {
       celebrateWin();
     }
     updateStatsUI(true); // animate count-ups and progress bar
     appState.animating = false;
+
+    // Show game-over screen overlay after delay
+    setTimeout(() => {
+      showGameOverScreen();
+    }, 1800);
   }, 100);
 }
 
@@ -621,6 +633,15 @@ function resetGame() {
   appState.animating = false;
   appState.movesCount = 0;
   document.getElementById('moveCounter').textContent = '0 / 9';
+
+  // Track start time
+  appState.roundStartTime = Date.now();
+  
+  // Hide game-over screen if active
+  hideGameOverScreen();
+
+  // Clear cells in DOM
+  renderGameBoard();
 
   updateStatsUI(false);
 
@@ -863,6 +884,158 @@ function updateStatsUI(animate = true) {
   }
 }
 
+// ========== GAME OVER OVERLAY FLOW ==========
+/**
+ * Render and display the Game-Over screen overlay
+ */
+function showGameOverScreen() {
+  const overlay = document.getElementById('gameOverOverlay');
+  if (!overlay) return;
+
+  const winner = gameEngine.winner;
+  const mode = appState.gameMode;
+  
+  const resultEmoji = document.getElementById('resultEmoji');
+  const resultTitle = document.getElementById('resultTitle');
+  const goMovesCount = document.getElementById('goMovesCount');
+  const goTimePlayed = document.getElementById('goTimePlayed');
+  
+  let emoji = '🤝';
+  let title = 'Draw!';
+  let isHumanWin = false;
+  let isAIWin = false;
+
+  // Reset classes
+  resultTitle.className = 'result-title';
+  resultTitle.removeAttribute('data-text');
+  
+  if (winner !== null && winner !== 0) {
+    if (mode === 'ai') {
+      if (winner === appState.playerSymbol) {
+        emoji = '🎉';
+        title = 'You Win!';
+        isHumanWin = true;
+      } else {
+        emoji = '🤖';
+        title = 'AI Wins!';
+        isAIWin = true;
+      }
+    } else {
+      emoji = '🎉';
+      title = winner === 1 ? 'Player X Wins!' : 'Player O Wins!';
+      isHumanWin = true;
+    }
+  }
+
+  resultEmoji.textContent = emoji;
+  resultTitle.textContent = title;
+  
+  if (isHumanWin) {
+    resultTitle.classList.add('human-win');
+  } else if (isAIWin) {
+    resultTitle.classList.add('glitch-text');
+    resultTitle.setAttribute('data-text', title);
+  } else {
+    resultTitle.classList.add('draw-game');
+  }
+
+  goMovesCount.textContent = `${appState.movesCount} / 9`;
+  
+  const elapsedSec = appState.roundStartTime ? Math.floor((Date.now() - appState.roundStartTime) / 1000) : 0;
+  goTimePlayed.textContent = formatTime(elapsedSec);
+
+  const miniBoard = document.getElementById('gameOverMiniBoard');
+  if (miniBoard) {
+    miniBoard.innerHTML = '';
+    const winningCombo = gameEngine.getWinningCombo();
+    
+    for (let i = 0; i < 9; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'mini-cell';
+      
+      const symbol = gameEngine.board[i];
+      if (symbol === 1) {
+        cell.classList.add('x');
+        cell.textContent = 'X';
+      } else if (symbol === -1) {
+        cell.classList.add('o');
+        cell.textContent = 'O';
+      }
+      
+      if (winningCombo && winningCombo.includes(i)) {
+        cell.classList.add('winning-cell');
+      }
+      
+      miniBoard.appendChild(cell);
+    }
+  }
+
+  overlay.classList.add('show');
+
+  if (isHumanWin) {
+    triggerGameOverConfetti();
+  }
+}
+
+/**
+ * Format elapsed time to readable duration format
+ * @param {number} seconds 
+ * @returns {string}
+ */
+function formatTime(seconds) {
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}m ${secs}s`;
+}
+
+/**
+ * Trigger dynamic particle confetti burst from center of overlay
+ */
+function triggerGameOverConfetti() {
+  const overlay = document.getElementById('gameOverOverlay');
+  if (!overlay) return;
+  
+  const colors = ['#00d4ff', '#ff6b9d', '#00ff88', '#fbbf24'];
+  const particleCount = 60;
+  
+  for (let i = 0; i < particleCount; i++) {
+    const p = document.createElement('div');
+    p.className = 'go-particle';
+    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    p.style.left = '50%';
+    p.style.top = '50%';
+    
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 80 + Math.random() * 150;
+    const dx = Math.cos(angle) * distance;
+    const dy = Math.sin(angle) * distance;
+    
+    p.style.setProperty('--dx', `${dx}px`);
+    p.style.setProperty('--dy', `${dy}px`);
+    
+    const size = 5 + Math.random() * 8;
+    p.style.width = `${size}px`;
+    p.style.height = `${size}px`;
+    p.style.animationDelay = `${Math.random() * 0.2}s`;
+    p.style.animationDuration = `${0.8 + Math.random() * 0.8}s`;
+    
+    overlay.appendChild(p);
+    
+    setTimeout(() => p.remove(), 2000);
+  }
+}
+
+/**
+ * Hide Game-Over screen overlay
+ */
+function hideGameOverScreen() {
+  const overlay = document.getElementById('gameOverOverlay');
+  if (overlay) {
+    overlay.classList.remove('show');
+  }
+}
+
 // ========== INITIALIZATION ==========
 /**
  * Initialize the application
@@ -874,6 +1047,35 @@ function initializeApp() {
   initializeMenu();
   loadStats(); // Load previous stats
   AIVisualizer.init(); // Initialize visualization toggles
+
+  // Game-Over Screen Events
+  const rematchBtn = document.getElementById('rematchButton');
+  if (rematchBtn) {
+    rematchBtn.addEventListener('click', () => {
+      hideGameOverScreen();
+      resetGame();
+    });
+  }
+
+  const goMenuBtn = document.getElementById('menuButton');
+  if (goMenuBtn) {
+    goMenuBtn.addEventListener('click', () => {
+      hideGameOverScreen();
+      returnToMenu();
+    });
+  }
+
+  const viewStatsLink = document.getElementById('viewStatsLink');
+  if (viewStatsLink) {
+    viewStatsLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      hideGameOverScreen();
+      const statsPanel = document.getElementById('statsPanel');
+      if (statsPanel) {
+        statsPanel.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
 
   // Load pre-trained Q-table and initialize the AI agent
   QTableLoader.load()
