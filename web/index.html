@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="css/board.css">
   <link rel="stylesheet" href="css/animations.css">
   <link rel="stylesheet" href="css/menu.css">
+  <link rel="stylesheet" href="css/stats.css">
   
   <title>TIC-TAC-TOE | Q-Learning AI Game</title>
 </head>
@@ -110,6 +111,85 @@
             <p class="status-text">Starting game...</p>
           </div>
           <button id="resetButton" class="reset-button">New Game</button>
+
+          <!-- Stats Panel -->
+          <div class="stats-panel" id="statsPanel">
+            <!-- Session Stats Card -->
+            <div class="stats-card">
+              <h3 class="stats-card-title">📊 Session Stats</h3>
+              
+              <div class="scoreboard">
+                <div class="score-player">
+                  <span class="player-label" id="leftPlayerLabel">You</span>
+                  <span class="score-num" id="leftPlayerScore">0</span>
+                </div>
+                
+                <div class="progress-bar-wrapper">
+                  <div class="progress-bar" id="winRateBar"></div>
+                </div>
+                
+                <div class="score-player">
+                  <span class="score-num" id="rightPlayerScore">0</span>
+                  <span class="player-label" id="rightPlayerLabel">AI</span>
+                </div>
+              </div>
+              
+              <div class="draws-row">
+                <span>Draws</span>
+                <span class="score-num" id="drawScore">0</span>
+              </div>
+              
+              <hr class="stats-divider">
+              
+              <div class="stats-row">
+                <span>Games Played</span>
+                <span class="stat-val" id="gamesPlayed">0</span>
+              </div>
+              
+              <div class="stats-row">
+                <span>Win Rate</span>
+                <span class="stat-val" id="winRatePct">0%</span>
+              </div>
+              
+              <div class="stats-row">
+                <span>Current Streak</span>
+                <span class="stat-val" id="currentStreak">-</span>
+              </div>
+              
+              <div class="stats-row">
+                <span>Current Moves</span>
+                <span class="stat-val" id="moveCounter">0 / 9</span>
+              </div>
+            </div>
+
+            <!-- AI Info Card (toggled via JS) -->
+            <div class="stats-card ai-info-card">
+              <h3 class="stats-card-title">🧠 AI Info</h3>
+              
+              <div class="stats-row">
+                <span>Q-Table</span>
+                <span class="stat-val">3,555 states</span>
+              </div>
+              
+              <div class="stats-row">
+                <span>Mode</span>
+                <span class="stat-val">Exploitation (ε=0)</span>
+              </div>
+              
+              <div class="stats-row">
+                <span>Difficulty</span>
+                <span class="stat-val text-unbeatable">Unbeatable</span>
+              </div>
+            </div>
+
+            <!-- Game History Card -->
+            <div class="stats-card history-card">
+              <h3 class="stats-card-title">📜 Game History</h3>
+              <div class="history-list" id="historyList">
+                <div class="history-empty">No games played yet.</div>
+              </div>
+            </div>
+          </div>
         </aside>
       </main>
 

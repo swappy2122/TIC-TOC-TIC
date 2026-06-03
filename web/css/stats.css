@@ -1,0 +1,291 @@
+/* ========================================
+   TIC-TAC-TOE | Live Game Statistics Panel
+   ======================================== */
+
+/* Stats Panel Container */
+.stats-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+/* Base Card Styling */
+.stats-card {
+  backdrop-filter: blur(16px);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.stats-card:hover {
+  border-color: var(--border-color-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stats-card-title {
+  font-size: var(--fs-base);
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: var(--font-display);
+}
+
+/* Scoreboard Layout */
+.scoreboard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.score-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.player-label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: var(--space-1);
+}
+
+.score-num {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Win Rate Dual Bar */
+.progress-bar-wrapper {
+  flex-grow: 1;
+  height: 8px;
+  background: rgba(255, 107, 157, 0.3); /* AI color track (Losses side) */
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 107, 157, 0.5);
+}
+
+.progress-bar {
+  height: 100%;
+  width: 50%; /* Starts split 50/50 */
+  background: linear-gradient(90deg, var(--accent-win), var(--accent-x));
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow) cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Draws Display Row */
+.draws-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--space-1);
+  margin-bottom: var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.draws-row .score-num {
+  font-size: var(--fs-lg);
+  color: var(--accent-draw);
+}
+
+/* Horizontal Line Dividers */
+.stats-divider {
+  border: 0;
+  border-top: 1px dashed var(--border-color);
+  margin: var(--space-3) 0;
+}
+
+/* Info Rows */
+.stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.stats-row:last-child {
+  margin-bottom: 0;
+}
+
+.stat-val {
+  font-weight: var(--fw-semibold);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+}
+
+/* Move counter specific coloring */
+#moveCounter {
+  color: var(--accent-x);
+  font-weight: var(--fw-bold);
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}
+
+/* AI Info Specific styles */
+.text-unbeatable {
+  color: var(--accent-o);
+  text-shadow: var(--glow-o);
+  animation: pulseNeon 2s infinite alternate;
+}
+
+@keyframes pulseNeon {
+  from {
+    text-shadow: 0 0 4px rgba(255, 107, 157, 0.4);
+  }
+  to {
+    text-shadow: 0 0 12px rgba(255, 107, 157, 0.8);
+  }
+}
+
+/* Fire and Ice Streak Colors */
+.streak-fire {
+  color: #fb8c00;
+  font-weight: var(--fw-bold);
+  text-shadow: 0 0 8px rgba(251, 140, 0, 0.6);
+}
+
+.streak-ice {
+  color: #00d4ff;
+  font-weight: var(--fw-bold);
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+}
+
+/* Game History log */
+.history-card {
+  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--fs-xs);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  animation: slideInHistory 0.3s var(--ease-out);
+}
+
+@keyframes slideInHistory {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.history-item.win {
+  border-color: rgba(0, 255, 136, 0.2);
+  background: rgba(0, 255, 136, 0.03);
+}
+
+.history-item.loss {
+  border-color: rgba(255, 107, 157, 0.2);
+  background: rgba(255, 107, 157, 0.03);
+}
+
+.history-item.draw {
+  border-color: rgba(251, 191, 36, 0.2);
+  background: rgba(251, 191, 36, 0.03);
+}
+
+.history-game-num {
+  font-weight: var(--fw-semibold);
+  color: var(--text-muted);
+}
+
+.history-result {
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+}
+
+.history-result.win {
+  color: var(--accent-win);
+  text-shadow: 0 0 6px rgba(0, 255, 136, 0.3);
+}
+
+.history-result.loss {
+  color: var(--accent-o);
+  text-shadow: 0 0 6px rgba(255, 107, 157, 0.3);
+}
+
+.history-result.draw {
+  color: var(--accent-draw);
+  text-shadow: 0 0 6px rgba(251, 191, 36, 0.3);
+}
+
+.history-empty {
+  font-size: var(--fs-xs);
+  color: var(--text-disabled);
+  text-align: center;
+  padding: var(--space-4) 0;
+  font-style: italic;
+}
+
+/* Number pop/growth animation */
+.count-up-animate {
+  animation: countUpPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes countUpPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Adjust layout sidebar for larger display */
+.game-sidebar {
+  min-width: 280px !important;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .game-sidebar {
+    min-width: 100% !important;
+  }
+}

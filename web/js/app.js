@@ -32,10 +32,26 @@ const appState = {
   gameMode: null, // 'ai' or 'human'
   playerSymbol: null, // 1 (X) or -1 (O)
   statistics: {
-    xWins: 0,
-    oWins: 0,
-    draws: 0,
+    aiMode: {
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      gamesPlayed: 0,
+      streakType: null,
+      streakCount: 0,
+      history: [],
+    },
+    humanMode: {
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      gamesPlayed: 0,
+      streakType: null,
+      streakCount: 0,
+      history: [],
+    },
   },
+  movesCount: 0,
   animating: false,
 };
 
@@ -104,6 +120,13 @@ function startGame() {
     gameEngine.reset();
     renderGameBoard();
     attachEventListeners();
+    
+    // Reset move counter
+    appState.movesCount = 0;
+    document.getElementById('moveCounter').textContent = '0 / 9';
+    
+    // Display stats and configure labels
+    updateStatsUI(false);
     
     // Update subtitle based on mode
     gameSubtitle.textContent = appState.gameMode === 'ai' ? 'vs AI' : 'vs Human';
@@ -349,6 +372,78 @@ function handleInvalidMove(index) {
 
 // ========== GAME MANAGEMENT ==========
 /**
+ * Handles game termination: updates streaks, history, persists stats, and triggers animations.
+ */
+function endCurrentGame() {
+  gameBoard.classList.add('game-over');
+  appState.animating = true;
+
+  const mode = appState.gameMode;
+  const stats = mode === 'ai' ? appState.statistics.aiMode : appState.statistics.humanMode;
+  const winner = gameEngine.winner;
+
+  // Increment games played
+  stats.gamesPlayed++;
+
+  let result = 'draw';
+  if (winner !== null) {
+    let isHumanWinner = false;
+    if (mode === 'ai') {
+      isHumanWinner = (winner === appState.playerSymbol);
+    } else {
+      isHumanWinner = (winner === 1); // Player X
+    }
+
+    if (isHumanWinner) {
+      stats.wins++;
+      result = 'win';
+      if (stats.streakType === 'w') {
+        stats.streakCount++;
+      } else {
+        stats.streakType = 'w';
+        stats.streakCount = 1;
+      }
+    } else {
+      stats.losses++;
+      result = 'loss';
+      if (stats.streakType === 'l') {
+        stats.streakCount++;
+      } else {
+        stats.streakType = 'l';
+        stats.streakCount = 1;
+      }
+    }
+  } else {
+    stats.draws++;
+    stats.streakCount = 0; // resets streak
+  }
+
+  // Append history (limit to last 10 games)
+  stats.history = stats.history || [];
+  stats.history.push({
+    gameNum: stats.gamesPlayed,
+    result: result
+  });
+  if (stats.history.length > 10) {
+    stats.history.shift();
+  }
+
+  // Save to localStorage
+  saveStats();
+
+  // Show celebration/UI updates
+  setTimeout(() => {
+    if (winner === null) {
+      celebrateDraw();
+    } else {
+      celebrateWin();
+    }
+    updateStatsUI(true); // animate count-ups and progress bar
+    appState.animating = false;
+  }, 100);
+}
+
+/**
  * Triggers the AI to calculate and play a move
  */
 function makeAIMove() {
@@ -356,19 +451,15 @@ function makeAIMove() {
 
   const state = gameEngine.getState();
   if (state.currentPlayer === appState.playerSymbol) {
-    // It's the human's turn, not AI's turn
     return;
   }
 
-  // AI is now thinking
   appState.animating = true;
   updateGameStatus('🤖 AI is thinking...', 'thinking');
 
-  // Random artificial delay between 300ms and 600ms
   const delay = Math.floor(Math.random() * 300) + 300;
 
   setTimeout(() => {
-    // Check if state is still valid
     if (gameEngine.gameOver) {
       appState.animating = false;
       return;
@@ -380,7 +471,6 @@ function makeAIMove() {
       return;
     }
 
-    // AI chooses action
     const chosenAction = qAgent.chooseAction(gameEngine.board, availableActions);
     if (chosenAction === null || chosenAction === undefined) {
       console.error('[AI] Chosen action was invalid or null');
@@ -388,7 +478,6 @@ function makeAIMove() {
       return;
     }
 
-    // Make the move in game engine
     const success = gameEngine.makeMove(chosenAction);
     if (!success) {
       console.error('[AI] Failsafe: AI move rejected by engine');
@@ -396,7 +485,6 @@ function makeAIMove() {
       return;
     }
 
-    // Update board UI with AI slide-in animation and scan-line overlay
     const cells = document.querySelectorAll('.game-cell');
     const cell = cells[chosenAction];
     const symbol = gameEngine.board[chosenAction];
@@ -407,33 +495,17 @@ function makeAIMove() {
       cell.classList.add('o', 'active', 'ai-move');
     }
 
-    // Append robot scanline overlay element
     const scanline = document.createElement('div');
     scanline.className = 'scanline-overlay';
     cell.appendChild(scanline);
 
-    // Check game state after AI move
+    // Increment move counter
+    appState.movesCount++;
+    document.getElementById('moveCounter').textContent = `${appState.movesCount} / 9`;
+
     if (gameEngine.gameOver) {
-      gameBoard.classList.add('game-over');
-
-      setTimeout(() => {
-        if (gameEngine.winner === null) {
-          appState.statistics.draws++;
-          celebrateDraw();
-        } else {
-          if (gameEngine.winner === 1) {
-            appState.statistics.xWins++;
-          } else {
-            appState.statistics.oWins++;
-          }
-          celebrateWin();
-        }
-        appState.animating = false;
-      }, 100);
-
-      console.log(`[Game] Game over. Winner: ${gameEngine.winner}`);
+      endCurrentGame();
     } else {
-      // Continue to next turn (human's turn)
       updateBoardGlow();
       const currentSymbolName = gameEngine.currentPlayer === 1 ? 'X' : 'O';
       updateGameStatus(`Player ${currentSymbolName}'s turn (You)`);
@@ -456,7 +528,6 @@ function playMove(index) {
     return;
   }
 
-  // Update board display
   const cells = document.querySelectorAll('.game-cell');
   const symbol = gameEngine.board[index];
   if (symbol === 1) {
@@ -465,37 +536,19 @@ function playMove(index) {
     cells[index].classList.add('o', 'active');
   }
 
-  // Check game state
+  // Increment move counter
+  appState.movesCount++;
+  document.getElementById('moveCounter').textContent = `${appState.movesCount} / 9`;
+
   if (gameEngine.gameOver) {
-    gameBoard.classList.add('game-over');
-    appState.animating = true;
-
-    setTimeout(() => {
-      if (gameEngine.winner === null) {
-        appState.statistics.draws++;
-        celebrateDraw();
-      } else {
-        if (gameEngine.winner === 1) {
-          appState.statistics.xWins++;
-        } else {
-          appState.statistics.oWins++;
-        }
-        celebrateWin();
-      }
-      appState.animating = false;
-    }, 100);
-
-    console.log(`[Game] Game over. Winner: ${gameEngine.winner}`);
+    endCurrentGame();
   } else {
-    // Continue playing
     updateBoardGlow();
 
     if (appState.gameMode === 'ai') {
-      // AI's turn
       updateGameStatus(`Player ${gameEngine.currentPlayer === 1 ? 'X' : 'O'}'s turn (AI)`);
       makeAIMove();
     } else {
-      // Human's turn
       updateGameStatus(`Player ${gameEngine.currentPlayer === 1 ? 'X' : 'O'}'s turn`);
     }
   }
@@ -507,7 +560,10 @@ function playMove(index) {
 function resetGame() {
   gameEngine.reset();
   appState.animating = false;
-  renderGameBoard();
+  appState.movesCount = 0;
+  document.getElementById('moveCounter').textContent = '0 / 9';
+
+  updateStatsUI(false);
 
   if (appState.gameMode === 'ai') {
     if (appState.playerSymbol === -1) {
@@ -575,6 +631,179 @@ function logDesignTokens() {
   console.groupEnd();
 }
 
+// ========== PERSISTENCE & ANIMATIONS ==========
+const LOCAL_STORAGE_KEY = 'tictactoe_session_stats_v2';
+
+/**
+ * Load statistics from localStorage
+ */
+function loadStats() {
+  try {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed) {
+        if (parsed.aiMode) Object.assign(appState.statistics.aiMode, parsed.aiMode);
+        if (parsed.humanMode) Object.assign(appState.statistics.humanMode, parsed.humanMode);
+        console.log('[Stats] Loaded stats from localStorage:', appState.statistics);
+      }
+    }
+  } catch (e) {
+    console.error('[Stats] Error loading stats from localStorage:', e);
+  }
+}
+
+/**
+ * Save statistics to localStorage
+ */
+function saveStats() {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appState.statistics));
+    console.log('[Stats] Saved stats to localStorage');
+  } catch (e) {
+    console.error('[Stats] Error saving stats to localStorage:', e);
+  }
+}
+
+/**
+ * Easing animation for counting numbers
+ */
+function animateNumber(element, start, end, duration = 400) {
+  if (!element) return;
+  if (start === end) {
+    element.textContent = end;
+    return;
+  }
+
+  element.classList.remove('count-up-animate');
+  void element.offsetWidth; // trigger reflow
+  element.classList.add('count-up-animate');
+
+  const startTime = performance.now();
+
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = progress * (2 - progress); // ease out quad
+    const currentValue = Math.floor(start + (end - start) * easeProgress);
+
+    element.textContent = currentValue;
+
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      element.textContent = end;
+      element.classList.remove('count-up-animate');
+    }
+  }
+
+  requestAnimationFrame(update);
+}
+
+/**
+ * Update the stats board and game history UI
+ */
+function updateStatsUI(animate = true) {
+  const mode = appState.gameMode;
+  if (!mode) return;
+
+  const stats = mode === 'ai' ? appState.statistics.aiMode : appState.statistics.humanMode;
+
+  const leftLabel = document.getElementById('leftPlayerLabel');
+  const rightLabel = document.getElementById('rightPlayerLabel');
+  const leftScoreEl = document.getElementById('leftPlayerScore');
+  const rightScoreEl = document.getElementById('rightPlayerScore');
+  const drawsScoreEl = document.getElementById('drawScore');
+  const gamesPlayedEl = document.getElementById('gamesPlayed');
+  const winRateEl = document.getElementById('winRatePct');
+  const streakEl = document.getElementById('currentStreak');
+  const winRateBar = document.getElementById('winRateBar');
+  const aiInfoCard = document.querySelector('.ai-info-card');
+  const historyList = document.getElementById('historyList');
+
+  // Configure mode specific labels
+  if (mode === 'ai') {
+    leftLabel.textContent = 'You';
+    rightLabel.textContent = 'AI';
+    if (aiInfoCard) aiInfoCard.style.display = 'block';
+  } else {
+    leftLabel.textContent = 'Player X';
+    rightLabel.textContent = 'Player O';
+    if (aiInfoCard) aiInfoCard.style.display = 'none';
+  }
+
+  // Get previous displayed numbers
+  const oldLeft = parseInt(leftScoreEl.textContent, 10) || 0;
+  const oldRight = parseInt(rightScoreEl.textContent, 10) || 0;
+  const oldDraws = parseInt(drawsScoreEl.textContent, 10) || 0;
+  const oldGames = parseInt(gamesPlayedEl.textContent, 10) || 0;
+
+  // Run animations
+  if (animate) {
+    animateNumber(leftScoreEl, oldLeft, stats.wins);
+    animateNumber(rightScoreEl, oldRight, stats.losses);
+    animateNumber(drawsScoreEl, oldDraws, stats.draws);
+    animateNumber(gamesPlayedEl, oldGames, stats.gamesPlayed);
+  } else {
+    leftScoreEl.textContent = stats.wins;
+    rightScoreEl.textContent = stats.losses;
+    drawsScoreEl.textContent = stats.draws;
+    gamesPlayedEl.textContent = stats.gamesPlayed;
+  }
+
+  // Win Rate Percentage
+  const winRate = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
+  if (animate) {
+    const oldPct = parseInt(winRateEl.textContent, 10) || 0;
+    animateNumber(winRateEl, oldPct, winRate, 400);
+    setTimeout(() => {
+      winRateEl.textContent = winRate + '%';
+    }, 410);
+  } else {
+    winRateEl.textContent = winRate + '%';
+  }
+
+  // Progress Bar Split
+  const totalDecisive = stats.wins + stats.losses;
+  const winRatioPct = totalDecisive > 0 ? (stats.wins / totalDecisive) * 100 : 50;
+  winRateBar.style.width = `${winRatioPct}%`;
+
+  // Streak Rendering
+  if (stats.streakCount > 0) {
+    if (stats.streakType === 'w') {
+      streakEl.innerHTML = `<span class="streak-fire">🔥 W${stats.streakCount}</span>`;
+    } else {
+      streakEl.innerHTML = `<span class="streak-ice">❄️ L${stats.streakCount}</span>`;
+    }
+  } else {
+    streakEl.textContent = '-';
+  }
+
+  // Render history list
+  historyList.innerHTML = '';
+  if (!stats.history || stats.history.length === 0) {
+    historyList.innerHTML = '<div class="history-empty">No games played yet.</div>';
+  } else {
+    [...stats.history].reverse().forEach(item => {
+      const div = document.createElement('div');
+      div.className = `history-item ${item.result}`;
+      
+      let resultText = item.result;
+      if (mode === 'ai') {
+        resultText = item.result === 'win' ? 'Won' : item.result === 'loss' ? 'Lost' : 'Draw';
+      } else {
+        resultText = item.result === 'win' ? 'X Won' : item.result === 'loss' ? 'O Won' : 'Draw';
+      }
+
+      div.innerHTML = `
+        <span class="history-game-num">Game #${item.gameNum}</span>
+        <span class="history-result ${item.result}">${resultText}</span>
+      `;
+      historyList.appendChild(div);
+    });
+  }
+}
+
 // ========== INITIALIZATION ==========
 /**
  * Initialize the application
@@ -584,6 +813,7 @@ function initializeApp() {
 
   logDesignTokens();
   initializeMenu();
+  loadStats(); // Load previous stats
 
   // Load pre-trained Q-table and initialize the AI agent
   QTableLoader.load()
