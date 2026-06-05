@@ -116,6 +116,7 @@
 
           <!-- Stats Panel -->
           <div class="stats-panel" id="statsPanel">
+            <div class="drag-handle"></div>
             <!-- Session Stats Card -->
             <div class="stats-card">
               <h3 class="stats-card-title">📊 Session Stats</h3>
@@ -184,40 +185,6 @@
               </div>
             </div>
 
-            <!-- AI Brain Card (toggled via JS) -->
-            <div class="stats-card ai-brain-card" id="aiBrainCard">
-              <h3 class="stats-card-title collapsible" id="aiBrainTitle">
-                <span>🧠 AI Decision Brain</span>
-                <span class="collapse-icon">▼</span>
-              </h3>
-              
-              <div class="ai-brain-content" id="aiBrainContent">
-                <div class="heatmap-section">
-                  <h4 class="sub-section-title">Decision Heatmap</h4>
-                  <div class="mini-grid" id="heatmapGrid">
-                    <!-- 9 mini cells will be rendered here -->
-                  </div>
-                </div>
-                
-                <div class="confidence-section">
-                  <div class="confidence-header">
-                    <span>Move Confidence</span>
-                    <span id="confidenceValue">0%</span>
-                  </div>
-                  <div class="confidence-bar-wrapper">
-                    <div class="confidence-bar" id="confidenceBar"></div>
-                  </div>
-                </div>
-                
-                <div class="log-section">
-                  <h4 class="sub-section-title">Decision Log</h4>
-                  <div class="decision-log" id="decisionLog">
-                    <div class="log-empty">Waiting for AI move...</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <!-- Game History Card -->
             <div class="stats-card history-card">
               <h3 class="stats-card-title">📜 Game History</h3>
@@ -227,7 +194,58 @@
             </div>
           </div>
         </aside>
+
+        <!-- AI Brain Card (toggled via JS) -->
+        <div class="stats-card ai-brain-card" id="aiBrainCard">
+          <div class="drag-handle"></div>
+          <h3 class="stats-card-title collapsible" id="aiBrainTitle">
+            <span>🧠 AI Decision Brain</span>
+            <span class="collapse-icon">▼</span>
+          </h3>
+          
+          <div class="ai-brain-content" id="aiBrainContent">
+            <div class="heatmap-section">
+              <h4 class="sub-section-title">Decision Heatmap</h4>
+              <div class="mini-grid" id="heatmapGrid">
+                <!-- 9 mini cells will be rendered here -->
+              </div>
+            </div>
+            
+            <div class="confidence-section">
+              <div class="confidence-header">
+                <span>Move Confidence</span>
+                <span id="confidenceValue">0%</span>
+              </div>
+              <div class="confidence-bar-wrapper">
+                <div class="confidence-bar" id="confidenceBar"></div>
+              </div>
+            </div>
+            
+            <div class="log-section">
+              <h4 class="sub-section-title">Decision Log</h4>
+              <div class="decision-log" id="decisionLog">
+                <div class="log-empty">Waiting for AI move...</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
+
+      <!-- Bottom Navigation Bar for Mobile -->
+      <nav class="bottom-nav" id="bottomNav">
+        <button class="nav-item" id="navMenuBtn" aria-label="Home Menu">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Menu</span>
+        </button>
+        <button class="nav-item" id="navStatsBtn" aria-label="View Stats">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Stats</span>
+        </button>
+        <button class="nav-item" id="navBrainBtn" aria-label="View AI Brain">
+          <span class="nav-icon">🧠</span>
+          <span class="nav-label">AI Brain</span>
+        </button>
+      </nav>
 
       <!-- Footer -->
       <footer class="app-footer">
@@ -235,6 +253,9 @@
       </footer>
     </div>
   </div>
+
+  <!-- Drawer Backdrop for Mobile Sheets -->
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
 
   <!-- ========== GAME OVER OVERLAY ========== -->
   <div id="gameOverOverlay" class="game-over-overlay">
@@ -280,6 +301,7 @@
   <script src="js/q-agent.js" defer></script>
   <script src="js/q-table-loader.js" defer></script>
   <script src="js/visualizer.js" defer></script>
+  <script src="js/particles.js" defer></script>
   <script src="js/app.js" defer></script>
 </body>
 </html>

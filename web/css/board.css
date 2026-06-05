@@ -60,12 +60,10 @@
 
 /* ========== CELL HOVER EFFECTS ========== */
 .game-cell:hover:not(.disabled) {
-  transform: translateY(-2px);
+  transform: scale(1.05);
   border-color: var(--border-color);
   background: rgba(255, 255, 255, 0.08);
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.3),
-    var(--glow-x);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Glow effect for X player turn */
@@ -74,6 +72,7 @@
     inset 0 2px 4px rgba(0, 0, 0, 0.3),
     var(--glow-x);
   border-color: var(--accent-x);
+  transform: scale(1.05);
 }
 
 /* Glow effect for O player turn */
@@ -82,6 +81,7 @@
     inset 0 2px 4px rgba(0, 0, 0, 0.3),
     var(--glow-o);
   border-color: var(--accent-o);
+  transform: scale(1.05);
 }
 
 /* ========== CELL ACTIVE STATE (CLICKED) ========== */
@@ -100,8 +100,9 @@
 .game-cell.x::after {
   content: '';
   position: absolute;
-  width: 60px;
-  height: 6px;
+  width: 60%;
+  height: 6%;
+  min-height: 4px;
   background: linear-gradient(90deg, var(--accent-x), var(--accent-x));
   border-radius: var(--radius-full);
   box-shadow: var(--glow-x);
@@ -125,9 +126,9 @@
 .game-cell.o::before {
   content: '';
   position: absolute;
-  width: 60px;
-  height: 60px;
-  border: 6px solid var(--accent-o);
+  width: 60%;
+  height: 60%;
+  border: clamp(4px, 1.2vw, 6px) solid var(--accent-o);
   border-radius: var(--radius-full);
   box-shadow: var(--glow-o);
   animation: popIn var(--transition-base) var(--ease-bounce);
@@ -166,30 +167,64 @@
 }
 
 /* ========== RESPONSIVE ADJUSTMENTS ========== */
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .board-wrapper {
-    padding: var(--space-6);
+    padding: var(--space-5);
   }
 
   #gameBoard {
-    grid-template-columns: repeat(3, 80px);
-    grid-template-rows: repeat(3, 80px);
+    /* Scale cells to fill screen width minus app padding, min 48px touch target */
+    grid-template-columns: repeat(3, clamp(48px, calc((100vw - 64px) / 3), 110px));
+    grid-template-rows: repeat(3, clamp(48px, calc((100vw - 64px) / 3), 110px));
+    gap: var(--space-2);
   }
 
   .game-cell {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
+}
 
-  .game-cell.x::before,
-  .game-cell.x::after {
-    width: 50px;
-    height: 5px;
+/* ========== RIPPLE ANIMATIONS ========== */
+.game-cell {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple {
+  position: absolute;
+  border-radius: var(--radius-full);
+  transform: scale(0);
+  animation: ripple-effect 0.6s ease-out;
+  background-color: rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
   }
+}
 
-  .game-cell.o::before {
-    width: 50px;
-    height: 50px;
-    border-width: 5px;
+.cell-ripple {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transform: scale(0);
+  animation: centerRipple 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes centerRipple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
   }
 }
 

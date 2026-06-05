@@ -24,6 +24,67 @@ const gameBoard = document.getElementById('gameBoard');
 const gameStatus = document.getElementById('gameStatus');
 const resetButton = document.getElementById('resetButton');
 
+// ========== HAPTIC & RIPPLE SYSTEMS ==========
+/**
+ * Trigger mobile device haptic vibration pattern
+ * @param {number|number[]} pattern - Vibration duration in ms or pattern array
+ */
+function triggerHaptic(pattern = 12) {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) return; // respect reduced motion
+
+  if (navigator.vibrate) {
+    try {
+      navigator.vibrate(pattern);
+    } catch (e) {
+      console.warn('[Haptics] Failed to vibrate:', e);
+    }
+  }
+}
+
+/**
+ * Create a visual touch ripple at touch/click coordinates
+ */
+function createRipple(event, element) {
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReducedMotion) return;
+
+  const oldRipples = element.querySelectorAll('.ripple');
+  oldRipples.forEach(r => r.remove());
+
+  const rect = element.getBoundingClientRect();
+  const circle = document.createElement('span');
+  const diameter = Math.max(element.clientWidth, element.clientHeight);
+  const radius = diameter / 2;
+
+  circle.style.width = circle.style.height = `${diameter}px`;
+  
+  let clientX = event.clientX;
+  let clientY = event.clientY;
+
+  // Handle touch clients
+  if (event.touches && event.touches.length > 0) {
+    clientX = event.touches[0].clientX;
+    clientY = event.touches[0].clientY;
+  } else if (event.changedTouches && event.changedTouches.length > 0) {
+    clientX = event.changedTouches[0].clientX;
+    clientY = event.changedTouches[0].clientY;
+  }
+
+  if (clientX === undefined || clientY === undefined) {
+    circle.style.left = '0px';
+    circle.style.top = '0px';
+  } else {
+    circle.style.left = `${clientX - rect.left - radius}px`;
+    circle.style.top = `${clientY - rect.top - radius}px`;
+  }
+  
+  circle.classList.add('ripple');
+  element.appendChild(circle);
+
+  setTimeout(() => circle.remove(), 600);
+}
+
 // ========== APPLICATION STATE ==========
 const gameEngine = new GameEngine();
 let qAgent = null; // AI Agent instance
@@ -224,7 +285,7 @@ function renderGameBoard() {
   // Create 9 cells
   for (let i = 0; i < 9; i++) {
     const cell = document.createElement('div');
-    cell.className = 'game-cell';
+    cell.className = 'game-cell stagger-in';
     cell.dataset.index = i;
     cell.setAttribute('role', 'button');
     cell.setAttribute('tabindex', '0');
@@ -239,6 +300,11 @@ function renderGameBoard() {
     }
 
     gameBoard.appendChild(cell);
+
+    // Clean up stagger animation class after completion to prevent hover conflicts
+    setTimeout(() => {
+      cell.classList.remove('stagger-in');
+    }, 1000);
   }
 
   // Update turn-based glow for available cells
@@ -282,8 +348,18 @@ function celebrateWin() {
   // Draw winning line
   drawWinningLine(winningCombo);
 
-  // Trigger confetti
-  triggerConfetti(winnerSymbol);
+  // Trigger tactile victory vibration
+  triggerHaptic([100, 50, 100, 50, 200]);
+
+  // Trigger confetti burst from the center of the board
+  const rect = gameBoard.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const colors = winnerSymbol === 'X' ? ['#00d4ff'] : ['#ff6b9d'];
+  
+  if (window.ParticleSystem) {
+    window.ParticleSystem.burst(centerX, centerY, colors, 80);
+  }
 
   // Update status with celebration
   const winnerName = gameEngine.winner === 1 ? 'X' : 'O';
@@ -297,7 +373,24 @@ function celebrateWin() {
  */
 function celebrateDraw() {
   updateGameStatus('🤝 It\'s a draw!', 'draw');
-  triggerConfetti('draw');
+  
+  // Trigger draw simultaneous 360° rotation on cells
+  const cells = document.querySelectorAll('.game-cell');
+  cells.forEach(cell => {
+    cell.classList.add('draw-rotate');
+  });
+
+  // Trigger draw vibration pattern
+  triggerHaptic([50, 50, 100]);
+
+  // Trigger draw confetti burst
+  const rect = gameBoard.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  if (window.ParticleSystem) {
+    window.ParticleSystem.burst(centerX, centerY, ['#fbbf24'], 60);
+  }
+  
   console.log('[Celebration] Draw animated');
 }
 
@@ -332,38 +425,26 @@ function drawWinningLine(combo) {
  * @param {string} type - 'X', 'O', or 'draw'
  */
 function triggerConfetti(type) {
-  const colors = type === 'X' ? ['cyan'] : type === 'O' ? ['pink'] : ['cyan', 'pink', 'green'];
-  const count = 30;
-
-  for (let i = 0; i < count; i++) {
-    const confetti = document.createElement('div');
-    confetti.className = `confetti ${colors[i % colors.length]}`;
-
-    const x = Math.random() * window.innerWidth;
-    const y = Math.random() * window.innerHeight - window.innerHeight;
-    const tx = (Math.random() - 0.5) * 200;
-
-    confetti.style.left = x + 'px';
-    confetti.style.top = y + 'px';
-    confetti.style.setProperty('--tx', tx + 'px');
-
-    document.body.appendChild(confetti);
-
-    setTimeout(() => confetti.remove(), 2000);
-  }
+  // Overridden: replaced by ParticleSystem Canvas confetti in celebrations
 }
 
 /**
  * Update game status display
  * @param {string} message - Status message
- * @param {string} type - 'victory', 'draw', or null
+ * @param {string} type - 'victory', 'draw', 'thinking', or null
  */
 function updateGameStatus(message, type = null) {
   const statusText = gameStatus.querySelector('.status-text') || 
                      document.createElement('p');
   statusText.className = 'status-text';
   if (type) statusText.classList.add(type);
-  statusText.textContent = message;
+  
+  // Custom dots for AI thinking status
+  if (type === 'thinking') {
+    statusText.innerHTML = `🤖 AI is thinking<div class="thinking-dots"><span>●</span><span>●</span><span>●</span></div>`;
+  } else {
+    statusText.textContent = message;
+  }
 
   if (!statusText.parentElement) {
     gameStatus.appendChild(statusText);
@@ -379,6 +460,9 @@ function updateGameStatus(message, type = null) {
 function handleInvalidMove(index) {
   const cell = document.querySelector(`[data-index="${index}"]`);
   cell.classList.add('shake');
+
+  // Trigger error haptic vibration
+  triggerHaptic([40, 50, 40]);
 
   setTimeout(() => {
     cell.classList.remove('shake');
@@ -570,6 +654,15 @@ function makeAIMove() {
     scanline.className = 'scanline-overlay';
     cell.appendChild(scanline);
 
+    // AI placement spring ripple
+    const moveRipple = document.createElement('span');
+    moveRipple.className = 'cell-ripple';
+    cell.appendChild(moveRipple);
+    setTimeout(() => moveRipple.remove(), 600);
+
+    // Subtle AI move haptic response
+    triggerHaptic([10, 30, 10]);
+
     // Increment move counter
     appState.movesCount++;
     document.getElementById('moveCounter').textContent = `${appState.movesCount} / 9`;
@@ -606,6 +699,15 @@ function playMove(index) {
   } else if (symbol === -1) {
     cells[index].classList.add('o', 'active');
   }
+
+  // Human placement spring ripple
+  const moveRipple = document.createElement('span');
+  moveRipple.className = 'cell-ripple';
+  cells[index].appendChild(moveRipple);
+  setTimeout(() => moveRipple.remove(), 600);
+
+  // Subtle placement haptic response
+  triggerHaptic(15);
 
   // Increment move counter
   appState.movesCount++;
@@ -681,6 +783,7 @@ function attachEventListeners() {
  */
 function handleCellClick(event) {
   const cell = event.currentTarget;
+  createRipple(event, cell); // trigger touch coordinates ripple
   const index = parseInt(cell.dataset.index, 10);
   playMove(index);
 }
@@ -993,36 +1096,13 @@ function formatTime(seconds) {
  * Trigger dynamic particle confetti burst from center of overlay
  */
 function triggerGameOverConfetti() {
-  const overlay = document.getElementById('gameOverOverlay');
-  if (!overlay) return;
+  const width = window.innerWidth;
+  const height = window.innerHeight;
   
-  const colors = ['#00d4ff', '#ff6b9d', '#00ff88', '#fbbf24'];
-  const particleCount = 60;
-  
-  for (let i = 0; i < particleCount; i++) {
-    const p = document.createElement('div');
-    p.className = 'go-particle';
-    p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-    p.style.left = '50%';
-    p.style.top = '50%';
-    
-    const angle = Math.random() * Math.PI * 2;
-    const distance = 80 + Math.random() * 150;
-    const dx = Math.cos(angle) * distance;
-    const dy = Math.sin(angle) * distance;
-    
-    p.style.setProperty('--dx', `${dx}px`);
-    p.style.setProperty('--dy', `${dy}px`);
-    
-    const size = 5 + Math.random() * 8;
-    p.style.width = `${size}px`;
-    p.style.height = `${size}px`;
-    p.style.animationDelay = `${Math.random() * 0.2}s`;
-    p.style.animationDuration = `${0.8 + Math.random() * 0.8}s`;
-    
-    overlay.appendChild(p);
-    
-    setTimeout(() => p.remove(), 2000);
+  if (window.ParticleSystem) {
+    // Left & Right side dual bursts on Victory Overlay load
+    window.ParticleSystem.burst(width * 0.25, height * 0.45, ['#00d4ff', '#ff6b9d', '#00ff88'], 45);
+    window.ParticleSystem.burst(width * 0.75, height * 0.45, ['#00d4ff', '#ff6b9d', '#00ff88'], 45);
   }
 }
 
@@ -1040,6 +1120,160 @@ function hideGameOverScreen() {
 /**
  * Initialize the application
  */
+/**
+ * Bottom Drawer / Sheet Management for Mobile Viewports
+ */
+function openStatsDrawer() {
+  const statsPanel = document.getElementById('statsPanel');
+  const aiBrainCard = document.getElementById('aiBrainCard');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const navStatsBtn = document.getElementById('navStatsBtn');
+  const navBrainBtn = document.getElementById('navBrainBtn');
+
+  if (!statsPanel || !aiBrainCard) return;
+
+  // Close brain if open
+  aiBrainCard.classList.remove('active');
+  if (navBrainBtn) navBrainBtn.classList.remove('active');
+
+  statsPanel.classList.add('active');
+  if (navStatsBtn) navStatsBtn.classList.add('active');
+  if (backdrop) backdrop.classList.add('active');
+  
+  triggerHaptic(10);
+  console.log('[Drawer] Stats sheet opened');
+}
+
+function openBrainDrawer() {
+  const statsPanel = document.getElementById('statsPanel');
+  const aiBrainCard = document.getElementById('aiBrainCard');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const navStatsBtn = document.getElementById('navStatsBtn');
+  const navBrainBtn = document.getElementById('navBrainBtn');
+
+  if (!statsPanel || !aiBrainCard) return;
+
+  // Close stats if open
+  statsPanel.classList.remove('active');
+  if (navStatsBtn) navStatsBtn.classList.remove('active');
+
+  aiBrainCard.classList.add('active');
+  if (navBrainBtn) navBrainBtn.classList.add('active');
+  if (backdrop) backdrop.classList.add('active');
+
+  triggerHaptic(10);
+  console.log('[Drawer] AI Brain drawer opened');
+}
+
+function closeAllDrawers() {
+  const statsPanel = document.getElementById('statsPanel');
+  const aiBrainCard = document.getElementById('aiBrainCard');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const navStatsBtn = document.getElementById('navStatsBtn');
+  const navBrainBtn = document.getElementById('navBrainBtn');
+
+  if (statsPanel) statsPanel.classList.remove('active');
+  if (aiBrainCard) aiBrainCard.classList.remove('active');
+  if (backdrop) backdrop.classList.remove('active');
+  if (navStatsBtn) navStatsBtn.classList.remove('active');
+  if (navBrainBtn) navBrainBtn.classList.remove('active');
+
+  triggerHaptic(8);
+  console.log('[Drawer] All drawers closed');
+}
+
+function toggleStatsDrawer() {
+  const statsPanel = document.getElementById('statsPanel');
+  if (statsPanel && statsPanel.classList.contains('active')) {
+    closeAllDrawers();
+  } else {
+    openStatsDrawer();
+  }
+}
+
+function toggleBrainDrawer() {
+  const aiBrainCard = document.getElementById('aiBrainCard');
+  if (aiBrainCard && aiBrainCard.classList.contains('active')) {
+    closeAllDrawers();
+  } else {
+    openBrainDrawer();
+  }
+}
+
+/**
+ * Register mobile bottom nav event listeners
+ */
+function initializeMobileDrawers() {
+  const menuBtn = document.getElementById('navMenuBtn');
+  const statsBtn = document.getElementById('navStatsBtn');
+  const brainBtn = document.getElementById('navBrainBtn');
+  const backdrop = document.getElementById('drawerBackdrop');
+
+  if (menuBtn) {
+    menuBtn.addEventListener('click', () => {
+      closeAllDrawers();
+      returnToMenu();
+    });
+  }
+
+  if (statsBtn) {
+    statsBtn.addEventListener('click', toggleStatsDrawer);
+  }
+
+  if (brainBtn) {
+    brainBtn.addEventListener('click', toggleBrainDrawer);
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener('click', closeAllDrawers);
+  }
+
+  // Swipe Gestures
+  let touchStartY = 0;
+  let touchStartX = 0;
+
+  document.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    const isMobile = window.innerWidth <= 767;
+    if (!isMobile) return;
+
+    const touchEndY = e.changedTouches[0].clientY;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diffY = touchEndY - touchStartY;
+    const diffX = touchEndX - touchStartX;
+
+    // Minimum distance of 60px to count as swipe
+    if (Math.abs(diffY) > 60 && Math.abs(diffY) > Math.abs(diffX)) {
+      const statsPanel = document.getElementById('statsPanel');
+      const aiBrainCard = document.getElementById('aiBrainCard');
+      
+      const statsActive = statsPanel && statsPanel.classList.contains('active');
+      const brainActive = aiBrainCard && aiBrainCard.classList.contains('active');
+      const anyActive = statsActive || brainActive;
+
+      if (diffY < 0) {
+        // Swipe Up -> Open stats sheet (or brain drawer if in AI mode and stats isn't active)
+        if (!anyActive) {
+          if (appState.gameMode === 'ai') {
+            openBrainDrawer();
+          } else {
+            openStatsDrawer();
+          }
+        }
+      } else {
+        // Swipe Down -> Dismiss active drawer
+        if (anyActive) {
+          closeAllDrawers();
+        }
+      }
+    }
+  }, { passive: true });
+}
+
 function initializeApp() {
   console.log('[App] Initializing Tic-Tac-Toe Web Application');
 
@@ -1047,6 +1281,7 @@ function initializeApp() {
   initializeMenu();
   loadStats(); // Load previous stats
   AIVisualizer.init(); // Initialize visualization toggles
+  initializeMobileDrawers(); // Initialize bottom drawers for mobile
 
   // Game-Over Screen Events
   const rematchBtn = document.getElementById('rematchButton');

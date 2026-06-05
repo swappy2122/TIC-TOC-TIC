@@ -20,6 +20,7 @@
   padding: var(--space-5);
   box-shadow: var(--shadow-md);
   transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+  container-type: inline-size;
 }
 
 .stats-card:hover {
@@ -283,9 +284,85 @@
   gap: var(--space-4);
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
+/* Responsive adjustments & Bottom Sheet */
+@media (max-width: 767px) {
   .game-sidebar {
     min-width: 100% !important;
+  }
+
+  .stats-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    z-index: 2000;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-6) calc(20px + env(safe-area-inset-bottom, 0px)) var(--space-6);
+    margin-top: 0;
+    box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.5);
+  }
+
+  .stats-panel.active {
+    transform: translateY(0);
+  }
+
+  .stats-panel .stats-card {
+    backdrop-filter: none;
+    background: transparent;
+    border: none;
+    padding: var(--space-2) 0;
+    box-shadow: none;
+  }
+
+  .stats-panel .stats-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  .stats-panel .stats-divider {
+    margin: var(--space-2) 0;
+  }
+}
+
+/* Drag Handle styling */
+.drag-handle {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .drag-handle {
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: var(--text-disabled);
+    border-radius: var(--radius-full);
+    margin: 0 auto var(--space-4) auto;
+    opacity: 0.5;
+  }
+}
+
+/* Scoreboard Container Query for narrow layouts */
+@container (max-width: 250px) {
+  .scoreboard {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  .progress-bar-wrapper {
+    width: 100%;
+    height: 6px;
+  }
+  
+  .score-player {
+    min-width: unset;
   }
 }

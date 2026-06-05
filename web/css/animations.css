@@ -5,20 +5,24 @@
 
 /* ========== WIN CELL PULSING GLOW ========== */
 .game-cell.win {
-  animation: winPulse 0.6s ease-in-out infinite;
+  animation: winPulseThreeTimes 1.8s ease-in-out forwards;
 }
 
-@keyframes winPulse {
+@keyframes winPulseThreeTimes {
   0%, 100% {
-    box-shadow: 
-      inset 0 2px 4px rgba(0, 0, 0, 0.3),
-      0 0 25px rgba(0, 255, 136, 0.6);
+    transform: scale(1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
   }
-  50% {
+  16%, 50%, 83% {
+    transform: scale(1.08);
     box-shadow: 
       inset 0 2px 4px rgba(0, 0, 0, 0.3),
-      0 0 40px rgba(0, 255, 136, 0.9),
-      0 0 60px rgba(0, 255, 136, 0.5);
+      0 0 25px rgba(0, 255, 136, 0.7);
+    border-color: var(--accent-win);
+  }
+  33%, 66% {
+    transform: scale(1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -106,30 +110,26 @@
 
 /* ========== INVALID MOVE FEEDBACK ========== */
 .game-cell.shake {
-  animation: cellShake 0.4s ease-in-out;
+  animation: cellShakeRedFlash 0.4s cubic-bezier(.36,.07,.19,.97) both;
 }
 
-@keyframes cellShake {
+@keyframes cellShakeRedFlash {
   0%, 100% {
     transform: translateX(0);
+    border-color: var(--border-color-strong);
+    background: rgba(255, 255, 255, 0.05);
   }
-  10% {
-    transform: translateX(-4px);
+  15%, 45%, 75% {
+    transform: translateX(-6px);
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 0 15px rgba(239, 68, 68, 0.4);
   }
-  20% {
-    transform: translateX(4px);
-  }
-  30% {
-    transform: translateX(-4px);
-  }
-  40% {
-    transform: translateX(4px);
-  }
-  50% {
-    transform: translateX(-4px);
-  }
-  60% {
-    transform: translateX(0);
+  30%, 60%, 90% {
+    transform: translateX(6px);
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 0 15px rgba(239, 68, 68, 0.4);
   }
 }
 
@@ -210,12 +210,28 @@
   .winning-line,
   .confetti::before,
   .status-text.victory,
-  .status-text.draw {
+  .status-text.draw,
+  .stagger-in,
+  .ripple,
+  .cell-ripple,
+  .thinking-dots span,
+  .game-cell.draw-rotate {
     animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .game-cell.draw-rotate {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), var(--glow-draw) !important;
+    border-color: var(--accent-draw) !important;
   }
 
   .game-cell.shake {
     opacity: 0.7;
+    animation: none !important;
+    border-color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.15) !important;
   }
   
   .status-text.thinking::after {
@@ -229,6 +245,14 @@
     animation: none !important;
     transform: none !important;
     opacity: 1 !important;
+  }
+
+  .game-cell.ai-move.x::before {
+    transform: rotate(45deg) !important;
+  }
+
+  .game-cell.ai-move.x::after {
+    transform: rotate(-45deg) !important;
   }
   
   .scanline-overlay::before {
@@ -246,50 +270,67 @@
   align-items: center;
 }
 
-.status-text.thinking::after {
-  content: '...';
-  display: inline-block;
-  width: 0ch;
-  animation: pulsingDots 1.5s steps(4, end) infinite;
-  overflow: hidden;
-  vertical-align: bottom;
-  text-align: left;
+.thinking-dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 6px;
 }
 
-@keyframes pulsingDots {
-  to {
-    width: 3ch;
+.thinking-dots span {
+  font-size: var(--fs-base);
+  animation: sequentialDot 1.4s infinite;
+  opacity: 0.2;
+}
+
+.thinking-dots span:nth-child(1) { animation-delay: 0s; }
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes sequentialDot {
+  0%, 100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+    color: var(--accent-o);
+    text-shadow: var(--glow-o);
   }
 }
 
-/* 2. AI slide-in animations (replaces popIn) */
+/* 2. AI slide-in animations (uses popInSpring) */
 .game-cell.ai-move.o::before {
-  animation: slideInO 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+  animation: slideInOSpring 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
 }
 
 .game-cell.ai-move.x::before {
-  animation: slideInXBefore 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+  animation: slideInXBeforeSpring 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
 }
 
 .game-cell.ai-move.x::after {
-  animation: slideInXAfter 0.4s cubic-bezier(0.25, 1, 0.5, 1) 50ms forwards !important;
+  animation: slideInXAfterSpring 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 50ms forwards !important;
 }
 
-@keyframes slideInO {
+@keyframes slideInOSpring {
   0% {
-    transform: translateY(-20px) scale(0.8);
+    transform: scale(0);
     opacity: 0;
   }
+  70% {
+    transform: scale(1.1);
+  }
   100% {
-    transform: translateY(0) scale(1);
+    transform: scale(1);
     opacity: 1;
   }
 }
 
-@keyframes slideInXBefore {
+@keyframes slideInXBeforeSpring {
   0% {
-    transform: translateY(-20px) rotate(45deg) scale(0.8);
+    transform: rotate(45deg) scale(0);
     opacity: 0;
+  }
+  70% {
+    transform: rotate(45deg) scale(1.1);
   }
   100% {
     transform: rotate(45deg) scale(1);
@@ -297,10 +338,13 @@
   }
 }
 
-@keyframes slideInXAfter {
+@keyframes slideInXAfterSpring {
   0% {
-    transform: translateY(-20px) rotate(-45deg) scale(0.8);
+    transform: rotate(-45deg) scale(0);
     opacity: 0;
+  }
+  70% {
+    transform: rotate(-45deg) scale(1.1);
   }
   100% {
     transform: rotate(-45deg) scale(1);
@@ -317,4 +361,44 @@
     transform: translateY(50%);
   }
 }
+
+/* ========== DRAW CELL ROTATION & GLOW ========== */
+.game-cell.draw-rotate {
+  animation: drawCellRotate 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes drawCellRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), var(--glow-draw);
+    border-color: var(--accent-draw);
+  }
+}
+
+/* ========== STAGGERED ENTRANCE ANIMATION ========== */
+.stagger-in {
+  opacity: 0;
+  transform: translateY(15px) scale(0.95);
+  animation: cellStaggerIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes cellStaggerIn {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.stagger-in:nth-child(1) { animation-delay: 0ms; }
+.stagger-in:nth-child(2) { animation-delay: 50ms; }
+.stagger-in:nth-child(3) { animation-delay: 100ms; }
+.stagger-in:nth-child(4) { animation-delay: 150ms; }
+.stagger-in:nth-child(5) { animation-delay: 200ms; }
+.stagger-in:nth-child(6) { animation-delay: 250ms; }
+.stagger-in:nth-child(7) { animation-delay: 300ms; }
+.stagger-in:nth-child(8) { animation-delay: 350ms; }
+.stagger-in:nth-child(9) { animation-delay: 400ms; }
 

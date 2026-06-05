@@ -208,7 +208,7 @@
   position: absolute;
   bottom: 125%;
   left: 50%;
-  transform: translateX(-50%) scale(0.9);
+  transform: translate(-50%, 8px) scale(0.9);
   background: rgba(10, 14, 26, 0.95);
   color: var(--text-primary);
   border: 1px solid var(--border-color);
@@ -218,17 +218,57 @@
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s, transform 0.2s;
+  transition: opacity 0.2s var(--ease-out), transform 0.2s var(--ease-out);
   z-index: 100;
   box-shadow: var(--shadow-md);
 }
 
 [data-tooltip]:hover::before {
   opacity: 1;
-  transform: translateX(-50%) scale(1);
+  transform: translate(-50%, 0) scale(1);
 }
 
 /* Ensure tooltips do not crop in sidebars */
 .mini-grid [data-tooltip]::before {
   bottom: 130%;
+}
+
+/* Mobile Brain Drawer */
+@media (max-width: 767px) {
+  #aiBrainCard {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+    border: 1px solid var(--border-color);
+    border-bottom: none;
+    z-index: 2001; /* Slightly above stats panel */
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: var(--space-4) var(--space-6) calc(20px + env(safe-area-inset-bottom, 0px)) var(--space-6);
+    margin-top: 0;
+    box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.5);
+  }
+
+  #aiBrainCard.active {
+    transform: translateY(0);
+  }
+
+  /* Keep content open inside the drawer on mobile */
+  #aiBrainCard .ai-brain-content.collapsed {
+    max-height: 800px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    padding-top: var(--space-2) !important;
+  }
+
+  #aiBrainCard .collapsible .collapse-icon {
+    display: none;
+  }
 }

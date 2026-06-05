@@ -4,6 +4,20 @@
 
 @import url('design-system.css');
 
+:root {
+  /* Fluid Typography Overrides using clamp() */
+  --fs-xs: clamp(0.7rem, 0.5vw + 0.6rem, 0.75rem);
+  --fs-sm: clamp(0.8rem, 0.5vw + 0.7rem, 0.875rem);
+  --fs-base: clamp(0.9rem, 0.8vw + 0.7rem, 1.05rem);
+  --fs-lg: clamp(1rem, 1vw + 0.8rem, 1.2rem);
+  --fs-xl: clamp(1.1rem, 1.2vw + 0.9rem, 1.35rem);
+  --fs-2xl: clamp(1.3rem, 1.5vw + 1rem, 1.6rem);
+  --fs-3xl: clamp(1.5rem, 2vw + 1.2rem, 2rem);
+  --fs-4xl: clamp(1.8rem, 2.5vw + 1.4rem, 2.5rem);
+  --fs-5xl: clamp(2.2rem, 3.5vw + 1.5rem, 3.5rem);
+  --fs-6xl: clamp(2.8rem, 5vw + 1.8rem, 4.8rem);
+}
+
 /* ========== RESET & BASE STYLES ========== */
 * {
   margin: 0;
@@ -125,11 +139,12 @@ p {
 /* ========== APP MAIN CONTENT ========== */
 .app-main {
   display: flex;
-  gap: var(--space-12);
+  gap: var(--space-8);
   align-items: flex-start;
   justify-content: center;
   flex-wrap: wrap;
   margin-bottom: var(--space-12);
+  width: 100%;
 }
 
 .game-container {
@@ -138,8 +153,12 @@ p {
 
 /* ========== GAME SIDEBAR (STATUS) ========== */
 .game-sidebar {
-  min-width: 200px;
   animation: slideUp 0.6s var(--ease-out) 0.2s both;
+}
+
+/* Hide bottom nav on desktop/tablet by default */
+.bottom-nav {
+  display: none;
 }
 
 .game-status {
@@ -226,13 +245,174 @@ p {
   color: var(--bg-primary);
 }
 
-/* ========== RESPONSIVE UTILITIES ========== */
-@media (max-width: 640px) {
+/* ========== RESPONSIVE UTILITIES & BREAKPOINTS ========== */
+
+/* Mobile Tier (<=767px) */
+@media (max-width: 767px) {
   html {
     font-size: 14px;
   }
 
   #app {
-    padding: var(--space-3);
+    padding: var(--space-4) var(--space-4) calc(80px + env(safe-area-inset-bottom, 0px)) var(--space-4);
+    min-height: 100dvh;
+  }
+
+  .app-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .app-main {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .game-container {
+    width: 100%;
+    max-width: 450px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .game-sidebar {
+    width: 100%;
+    max-width: 450px;
+    min-width: unset !important;
+  }
+
+  /* Bottom Navigation Styles */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    background: rgba(10, 14, 26, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid var(--border-color);
+    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 0.75rem;
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: color var(--transition-fast), transform var(--transition-fast);
+    padding: var(--space-2);
+    flex-grow: 1;
+    height: 100%;
+    user-select: none;
+  }
+
+  .nav-item:hover, .nav-item.active {
+    color: var(--accent-x);
+  }
+
+  .nav-item:active {
+    transform: scale(0.95);
+  }
+
+  .nav-icon {
+    font-size: var(--fs-lg);
+    margin-bottom: 2px;
+  }
+
+  /* Drawer Backdrop Styles */
+  .drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(8, 12, 21, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 1500;
+    transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .drawer-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* Tablet Tier (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app-main {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-8);
+    max-width: 650px;
+  }
+
+  .game-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .game-sidebar {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  #aiBrainCard {
+    width: 100%;
+    max-width: 500px;
+    margin-top: var(--space-4);
+  }
+}
+
+/* Desktop Tier (>=1024px) */
+@media (min-width: 1024px) {
+  .app-main {
+    display: grid;
+    grid-template-columns: minmax(360px, 1fr) 320px;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "board sidebar"
+      "brain sidebar";
+    gap: var(--space-10);
+    width: 100%;
+    max-width: 900px;
+    align-items: start;
+  }
+
+  .game-container {
+    grid-area: board;
+    justify-self: center;
+  }
+
+  .game-sidebar {
+    grid-area: sidebar;
+    width: 100%;
+    min-width: 320px !important;
+  }
+
+  #aiBrainCard {
+    grid-area: brain;
+    width: 100%;
+    max-width: 500px;
+    justify-self: center;
+    margin-top: 0;
   }
 }

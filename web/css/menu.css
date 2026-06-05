@@ -465,7 +465,7 @@
 }
 
 /* ========== MOBILE RESPONSIVE ========== */
-@media (max-width: 640px) {
+@media (max-width: 767px) {
   .menu-header {
     margin-bottom: var(--space-8);
   }
@@ -481,11 +481,13 @@
   .mode-cards {
     grid-template-columns: 1fr;
     gap: var(--space-4);
+    width: 100%;
   }
 
   .mode-card {
     padding: var(--space-6);
     gap: var(--space-2);
+    width: 100%;
   }
 
   .mode-icon {
@@ -494,6 +496,8 @@
 
   .symbol-picker {
     gap: var(--space-6);
+    width: 100%;
+    justify-content: center;
   }
 
   .symbol-button {
@@ -502,8 +506,13 @@
     font-size: 2.5rem;
   }
 
+  .play-button-container {
+    width: 100%;
+  }
+
   .play-button {
-    min-width: 150px;
+    width: 100%;
+    max-width: 320px;
     min-height: 50px;
     padding: var(--space-3) var(--space-8);
     font-size: var(--fs-base);
