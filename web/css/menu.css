@@ -27,6 +27,7 @@
 
 /* ========== MENU HEADER ========== */
 .menu-header {
+  position: relative;
   text-align: center;
   margin-bottom: var(--space-16);
   animation: menuTitleSlideDown 0.8s var(--ease-bounce) 0.1s both;

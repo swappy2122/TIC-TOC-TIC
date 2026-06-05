@@ -116,15 +116,54 @@
   --bp-2xl: 1536px;
 }
 
+/* ========== LIGHT THEME OVERRIDES ========== */
+[data-theme="light"] {
+  color-scheme: light;
+  
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.75);
+  --bg-glass-hover: rgba(255, 255, 255, 0.9);
+  
+  --accent-x: #0284c7;         /* Sky blue for X */
+  --accent-o: #e11d48;         /* Rose pink for O */
+  --accent-win: #10b981;       /* Victory green */
+  --accent-draw: #d97706;      /* Draw amber */
+  
+  --text-primary: #0f172a;     /* Slate-900 */
+  --text-muted: #64748b;       /* Slate-500 */
+  --text-disabled: #94a3b8;    /* Slate-400 */
+  
+  --border-color: rgba(15, 23, 42, 0.1);
+  --border-color-strong: rgba(15, 23, 42, 0.2);
+  
+  /* Softer shadows & neon glows for light background */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+  
+  --glow-x: 0 0 15px rgba(2, 132, 199, 0.2);
+  --glow-x-strong: 0 0 25px rgba(2, 132, 199, 0.35);
+  --glow-o: 0 0 15px rgba(225, 29, 72, 0.2);
+  --glow-o-strong: 0 0 25px rgba(225, 29, 72, 0.35);
+  --glow-win: 0 0 20px rgba(16, 185, 129, 0.3);
+  --glow-draw: 0 0 15px rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
 /* ========== Dark Mode Active (can support light theme with @media) ========== */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
   }
 }
 
 @media (prefers-color-scheme: light) {
-  :root {
+  :root:not([data-theme="dark"]) {
     color-scheme: light;
   }
 }
