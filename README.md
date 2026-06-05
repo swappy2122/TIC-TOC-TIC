@@ -4,6 +4,95 @@ A professional **Reinforcement Learning** implementation of Tic-Tac-Toe using **
 
 **Status**: ✅ Complete - Ready to play! | **Day 3 Delivered** 🚀
 
+## 🌐 Web UI
+
+Experience the trained Q-learning agent in a modern, interactive web application featuring rich glassmorphic aesthetics, fluid micro-animations, and real-time training analytics.
+
+### 📸 Interface Preview
+
+````carousel
+![Desktop Gameplay](web/screenshots/desktop_gameplay.png)
+<!-- slide -->
+![Mobile Landing](web/screenshots/mobile_landing.png)
+<!-- slide -->
+![Mobile Gameplay](web/screenshots/mobile_gameplay.png)
+<!-- slide -->
+![Mobile Stats & Brain Drawer](web/screenshots/mobile_stats.png)
+````
+
+### 🚀 Web Setup & Play
+
+To run the Web UI locally, you don't need any complex build pipelines. You can choose either of these quick methods:
+
+#### Method A: Serve with `npx` (Recommended for performance tracking)
+```bash
+# Navigate to the web folder
+cd web
+
+# Serve locally
+npx serve .
+# Or alternative Python server:
+# python3 -m http.server 8000
+```
+Then open [http://localhost:3000](http://localhost:3000) (or the port shown in your terminal) in your browser.
+
+#### Method B: Direct Launch
+Simply open the `web/index.html` file directly in your preferred web browser.
+
+---
+
+### 🆚 CLI vs. Web UI Comparison
+
+| Feature | 🎮 CLI (`play.py`) | 🌐 Web UI |
+| :--- | :--- | :--- |
+| **Styling & Aesthetics** | Classic retro ASCII board | Premium glassmorphism, fluid typography, glow accents |
+| **Theme System** | Terminal defaults | Light / Dark mode sync + system preference detection |
+| **Interactive Board** | Index-based input (`0-8`) | Touch-friendly responsive cells with hover indicators |
+| **Real-time Analytics** | Text-based performance output | AI Brain Drawer showing Q-values and state visualization |
+| **Haptic Feedback** | N/A | Vibration APIs (`navigator.vibrate`) for actions/win states |
+| **Animations** | Instant text updates | Staggered entrance, motion blur titles, canvas confetti |
+| **Offline Play** | Requires Python env | Runs directly in client browser (zero install) |
+
+---
+
+### 🏗️ Web Architecture
+
+The frontend is built with vanilla HTML5, CSS3, and JavaScript module structure. It communicates with the pre-trained Q-table model loaded dynamically from JSON.
+
+```mermaid
+graph TD
+    subgraph HTML & DOM
+        DOM[document.documentElement]
+        H_Menu["#theme-mask-menu"]
+        H_App["#theme-mask-app"]
+    end
+
+    subgraph CSS Design System
+        DS[design-system.css] --> B[board.css]
+        DS --> I[index.css]
+        DS --> M[menu.css]
+        DS --> S[stats.css]
+        DS --> D[dashboard.css]
+    end
+
+    subgraph JavaScript Core
+        T[theme.js] -->|Sync State / Set Class| DOM
+        A[app.js] -->|Update Grid / Show Modals| DOM
+        A -->|Get Q-values / Mode Selection| D
+        P[particles.js] -->|Canvas Overlay Background| DOM
+    end
+```
+
+---
+
+### 🎨 Design Credits & Inspiration
+
+- **UI Guidelines:** [Modern Web Guidance Skill](file:///Users/swappy/.gemini/config/plugins/modern-web-guidance-plugin/skills/modern-web-guidance/SKILL.md) for LCP and accessibility standards.
+- **Visual Design:** Inspired by Vercel's clean aesthetic, shadcn/ui design tokens, and CSS glassmorphism overlay standards.
+- **Typography & Icons:** Google Fonts (`Inter` + `Outfit`) and pure SVG inline mask components.
+
+---
+
 ## 📋 Project Structure
 
 ```
